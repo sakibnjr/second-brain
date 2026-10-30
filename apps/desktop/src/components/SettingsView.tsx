@@ -196,7 +196,7 @@ export function SettingsView() {
       {/* ───────── Left rail: Account ───────── */}
       <div className="space-y-6 lg:sticky lg:top-28">
         <div className={`${card} overflow-hidden`}>
-          <div className="h-20 bg-gradient-to-r from-blue-600/90 via-indigo-600/90 to-violet-600/80" />
+          <div className="h-20 bg-[#0A0D14]" />
           <div className="px-6 pb-6 -mt-10">
             {userEmail ? (
               <>
@@ -209,7 +209,7 @@ export function SettingsView() {
                     className="w-20 h-20 rounded-2xl object-cover ring-4 ring-surface shadow-md"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-2xl font-bold ring-4 ring-surface shadow-md">
+                  <div className="w-20 h-20 rounded-2xl bg-primary text-white flex items-center justify-center text-2xl font-bold ring-4 ring-surface shadow-md">
                     {(profile?.name || userEmail).charAt(0).toUpperCase()}
                   </div>
                 )}
