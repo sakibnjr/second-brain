@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Cloud,
   Plus,
-  Layers,
   User,
 } from "lucide-react";
 import { DashboardView } from "./components/DashboardView";
@@ -18,6 +17,7 @@ import { LearningView } from "./components/LearningView";
 import { CalendarView } from "./components/CalendarView";
 import { SettingsView } from "./components/SettingsView";
 import { TaskModal } from "./components/TaskModal";
+import { BrandWordmark } from "./components/BrandWordmark";
 import { syncEngine, SyncState } from "./lib/syncEngine";
 import { supabase } from "./lib/supabase";
 
@@ -194,19 +194,7 @@ export default function App() {
         <div>
           {/* Brand Header - exactly h-20 to match Main Header */}
           <div className="h-20 flex items-center justify-between px-5 border-b border-[#1E293B]">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/25">
-                <Layers className="w-4.5 h-4.5" />
-              </div>
-              <div>
-                <h1 className="text-sm font-bold tracking-tight text-white leading-none">
-                  Planner
-                </h1>
-                <p className="text-[10px] text-[#94A3B8] font-mono mt-1">
-                  Offline-first
-                </p>
-              </div>
-            </div>
+            <BrandWordmark subtitle="Offline OS" />
 
             <span
               className={`flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded-full border ${
@@ -259,7 +247,7 @@ export default function App() {
             <span>New Task</span>
           </button>
           <p className="text-[10px] text-[#64748B] text-center font-mono">
-            Personal Planner v1.0
+            Second Brain v1.0
           </p>
         </div>
       </aside>

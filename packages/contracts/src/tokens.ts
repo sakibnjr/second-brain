@@ -1,5 +1,5 @@
 /**
- * Shared Design Tokens for Personal Planner.
+ * Shared Design Tokens for Second Brain.
  * Used across React/Tailwind on Desktop and Jetpack Compose on Android.
  */
 export const DesignTokens = {

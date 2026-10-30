@@ -1,7 +1,7 @@
 [package]
 name = "personal-planner-desktop"
 version = "0.1.0"
-description = "Personal Planner Desktop Application"
+description = "Second Brain Desktop Application"
 authors = ["Sakib"]
 edition = "2021"
 

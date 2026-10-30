@@ -75,7 +75,7 @@ fun MainScreen() {
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Personal Planner - Milestone 1",
+                            text = "Second Brain - Workspace",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )

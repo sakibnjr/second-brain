@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { Storage } from "../lib/storage";
 import { syncEngine, SyncState } from "../lib/syncEngine";
+import { BrandWordmark } from "./BrandWordmark";
 import {
   User,
   LogOut,
@@ -143,7 +144,7 @@ export function SettingsView() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `planner-backup-${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `second-brain-backup-${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -430,6 +431,15 @@ export function SettingsView() {
               className="hidden"
             />
           </label>
+        </div>
+      </div>
+
+      {/* About Second Brain */}
+      <div className="p-6 rounded-2xl border border-border bg-surface shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <BrandWordmark size="md" subtitle="Offline-First Personal Operating System" />
+        <div className="sm:text-right font-mono text-[11px] text-textMuted">
+          <p>Second Brain v1.0.0 (Local-First)</p>
+          <p className="text-[10px] text-emerald-600 mt-0.5">● Linux & Android Sync Active</p>
         </div>
       </div>
     </div>

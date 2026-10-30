@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Personal Planner",
+  "productName": "Second Brain",
   "version": "0.1.0",
   "identifier": "com.planner.desktop",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Personal Planner",
+        "title": "Second Brain",
         "width": 1100,
         "height": 760,
         "minWidth": 800,
