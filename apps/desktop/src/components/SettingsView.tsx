@@ -167,7 +167,7 @@ export function SettingsView() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 w-full max-w-none">
       <div>
         <h2 className="text-xl font-bold tracking-tight text-textPrimary">
           Settings & Account
