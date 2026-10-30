@@ -16,6 +16,8 @@ import {
   Database,
   Check,
   User,
+  HardDrive,
+  Laptop,
 } from "lucide-react";
 
 export function SettingsView() {
@@ -47,6 +49,7 @@ export function SettingsView() {
     tasks: 0,
     ideas: 0,
     learning: 0,
+    sessions: 0,
   });
 
   const [isDark, setIsDark] = useState(() => {
@@ -97,10 +100,19 @@ export function SettingsView() {
   };
 
   const refreshStats = () => {
+    const tasks = Storage.getTasks().length;
+    const ideas = Storage.getIdeas().length;
+    const learning = Storage.getLearningResources();
+    let totalSessions = 0;
+    learning.forEach((l) => {
+      totalSessions += Storage.getStudySessions(l.id).length;
+    });
+
     setStorageStats({
-      tasks: Storage.getTasks().length,
-      ideas: Storage.getIdeas().length,
-      learning: Storage.getLearningResources().length,
+      tasks,
+      ideas,
+      learning: learning.length,
+      sessions: totalSessions,
     });
   };
 
@@ -251,51 +263,127 @@ export function SettingsView() {
   };
 
   const isSyncing = syncState === "syncing";
+  const totalItems =
+    storageStats.tasks +
+    storageStats.ideas +
+    storageStats.learning +
+    storageStats.sessions;
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6 min-h-0">
-      {/* 2-Column Responsive Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        {/* Left Column: Account & Authentication */}
-        <div className="space-y-6">
-          {/* Account Profile Card */}
-          <div className="bg-surface rounded-2xl border border-border p-6 shadow-xs space-y-5">
-            <div className="flex items-center justify-between pb-4 border-b border-border/80">
+    <div className="flex flex-col flex-1 w-full max-w-none space-y-6 min-h-0">
+      {/* 1. Top Quick Metric / Status Cards (Matching Dashboard Density) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 w-full shrink-0">
+        {/* Metric 1: Account Status */}
+        <div className="p-5 rounded-2xl border border-blue-200/80 bg-blue-50/90 dark:bg-blue-950/25 dark:border-blue-900/60 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-900/80 dark:text-blue-300">
+              Account Status
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-blue-500/15 flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <User className="w-4 h-4 fill-blue-600/30" />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-blue-950 dark:text-blue-100 tracking-tight my-1.5 truncate">
+            {userProfile.isLoggedIn ? userProfile.name : "Guest Mode"}
+          </div>
+          <div className="text-[11px] font-medium text-blue-700/80 dark:text-blue-300/80 truncate">
+            {userProfile.isLoggedIn ? userProfile.email : "Local storage only"}
+          </div>
+        </div>
+
+        {/* Metric 2: Sync Health */}
+        <div className="p-5 rounded-2xl border border-emerald-200/80 bg-emerald-50/90 dark:bg-emerald-950/25 dark:border-emerald-900/60 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-900/80 dark:text-emerald-300">
+              Sync Health
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-emerald-950 dark:text-emerald-100 font-mono tracking-tight my-1.5 capitalize">
+            {syncMessage || syncState}
+          </div>
+          <div className="text-[11px] font-medium text-emerald-700/80 dark:text-emerald-300/80">
+            {lastSync ? `Last synced ${new Date(lastSync).toLocaleTimeString()}` : "Ready to replicate"}
+          </div>
+        </div>
+
+        {/* Metric 3: Local Storage Vault */}
+        <div className="p-5 rounded-2xl border border-purple-200/80 bg-purple-50/90 dark:bg-purple-950/25 dark:border-purple-900/60 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-900/80 dark:text-purple-300">
+              Local Vault
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-600 dark:text-purple-400">
+              <Database className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-purple-950 dark:text-purple-100 font-mono tracking-tight my-1.5">
+            {totalItems} items
+          </div>
+          <div className="text-[11px] font-medium text-purple-700/80 dark:text-purple-300/80">
+            {storageStats.tasks} tasks · {storageStats.ideas} ideas · {storageStats.learning} courses
+          </div>
+        </div>
+
+        {/* Metric 4: Platform Engine */}
+        <div className="p-5 rounded-2xl border border-amber-200/80 bg-amber-50/90 dark:bg-amber-950/25 dark:border-amber-900/60 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-900/80 dark:text-amber-300">
+              Theme Mode
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-600 dark:text-amber-400">
+              {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </div>
+          </div>
+          <div className="text-2xl font-black text-amber-950 dark:text-amber-100 tracking-tight my-1.5">
+            {isDark ? "Obsidian Dark" : "Pure Light"}
+          </div>
+          <div className="text-[11px] font-medium text-amber-700/80 dark:text-amber-300/80">
+            v1.0.0 · Local-First Active
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Full-Width 3-Column Structured Layout (Zero dead margins) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full flex-1 min-h-[460px]">
+        {/* Column 1: Account & Profile Management */}
+        <div className="bg-surface rounded-2xl border border-border p-6 shadow-xs flex flex-col justify-between h-full">
+          <div>
+            <div className="flex items-center justify-between pb-4 border-b border-border/80 mb-5">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <User className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <User className="w-4.5 h-4.5" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-textPrimary tracking-tight">
                     Account & Profile
                   </h3>
-                  <p className="text-[11px] text-textMuted">
-                    {userProfile.isLoggedIn ? "Cloud connected" : "Local guest mode"}
-                  </p>
+                  <p className="text-[11px] text-textMuted">Identity and authentication</p>
                 </div>
               </div>
 
               {userProfile.isLoggedIn && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Google Verified</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  Active
                 </span>
               )}
             </div>
 
             {userProfile.isLoggedIn ? (
-              /* Signed In Profile State */
+              /* Signed In Profile Card */
               <div className="space-y-4">
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-background border border-border">
+                <div className="p-4 rounded-xl bg-background border border-border flex items-center gap-3.5">
                   {userProfile.avatarUrl ? (
                     <img
                       src={userProfile.avatarUrl}
                       alt={userProfile.name}
                       referrerPolicy="no-referrer"
-                      className="w-12 h-12 rounded-2xl object-cover ring-2 ring-primary/20 shadow-xs shrink-0"
+                      className="w-12 h-12 rounded-xl object-cover ring-2 ring-primary/20 shadow-xs shrink-0"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-xs shrink-0">
                       {userProfile.name.charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -308,31 +396,35 @@ export function SettingsView() {
                       {userProfile.email}
                     </p>
                     <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      <span>Sync active across Linux & Android</span>
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>Google OAuth Verified</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-1">
-                  <p className="text-xs text-textMuted">
-                    Signed in via Google OAuth
-                  </p>
-                  <button
-                    onClick={handleSignOut}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-rose-200 dark:border-rose-900/60 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold transition active:scale-95"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>Sign Out</span>
-                  </button>
+                <div className="p-4 rounded-xl bg-background/50 border border-border/80 space-y-2 text-xs text-textSecondary">
+                  <div className="flex justify-between items-center">
+                    <span className="text-textMuted">Storage Engine:</span>
+                    <span className="font-semibold text-textPrimary font-mono">Supabase Postgres</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-textMuted">Row Security:</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Enabled (auth.uid)</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-textMuted">Device Target:</span>
+                    <span className="font-semibold text-textPrimary">Linux Mint & Android</span>
+                  </div>
                 </div>
               </div>
             ) : (
-              /* Guest / Sign-In State */
+              /* Guest Mode Card */
               <div className="space-y-4">
-                <p className="text-xs text-textSecondary leading-relaxed">
-                  Sign in with your Google account to automatically synchronize all your tasks, ideas, and learning tracks with your Android phone.
-                </p>
+                <div className="p-4 rounded-xl bg-background border border-border space-y-2">
+                  <p className="text-xs text-textSecondary leading-relaxed">
+                    You are working in <strong>offline guest mode</strong>. Sign in with Google to enable continuous cloud synchronization with your Android phone.
+                  </p>
+                </div>
 
                 {authError && (
                   <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs">
@@ -348,12 +440,11 @@ export function SettingsView() {
                   </div>
                 )}
 
-                {/* Google Sign-in Primary Button */}
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={isAuthLoading}
-                  className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-border bg-background hover:bg-surfaceHover text-textPrimary text-xs font-bold shadow-xs hover:border-slate-300 transition active:scale-98 disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl border border-border bg-background hover:bg-surfaceHover text-textPrimary text-xs font-bold shadow-xs hover:border-slate-300 transition active:scale-95 disabled:opacity-60"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
                     <path
@@ -376,23 +467,22 @@ export function SettingsView() {
                   <span>Continue with Google</span>
                 </button>
 
-                {/* Collapsible Email Login for developers / custom auth */}
-                <div className="pt-2">
+                <div className="pt-1">
                   <button
                     type="button"
                     onClick={() => setShowEmailAuth(!showEmailAuth)}
                     className="text-xs text-textMuted hover:text-primary transition underline underline-offset-4"
                   >
-                    {showEmailAuth ? "Hide email login" : "Or sign in with email and password"}
+                    {showEmailAuth ? "Hide email form" : "Or use email / password"}
                   </button>
 
                   {showEmailAuth && (
-                    <form onSubmit={handleAuth} className="mt-3 space-y-3 pt-3 border-t border-border/80">
+                    <form onSubmit={handleAuth} className="mt-3 space-y-3 pt-3 border-t border-border">
                       <div className="flex gap-2">
                         <button
                           type="button"
                           onClick={() => setAuthMode("signin")}
-                          className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition ${
+                          className={`text-xs font-semibold px-3 py-1 rounded-lg transition ${
                             authMode === "signin"
                               ? "bg-primary text-white"
                               : "text-textSecondary hover:text-textPrimary"
@@ -403,7 +493,7 @@ export function SettingsView() {
                         <button
                           type="button"
                           onClick={() => setAuthMode("signup")}
-                          className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition ${
+                          className={`text-xs font-semibold px-3 py-1 rounded-lg transition ${
                             authMode === "signup"
                               ? "bg-primary text-white"
                               : "text-textSecondary hover:text-textPrimary"
@@ -412,7 +502,6 @@ export function SettingsView() {
                           Create Account
                         </button>
                       </div>
-
                       <input
                         type="email"
                         required
@@ -434,7 +523,7 @@ export function SettingsView() {
                         disabled={isAuthLoading}
                         className="w-full py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl transition disabled:opacity-50"
                       >
-                        {isAuthLoading ? "Processing..." : authMode === "signin" ? "Sign In" : "Register"}
+                        {isAuthLoading ? "Connecting..." : authMode === "signin" ? "Sign In" : "Register"}
                       </button>
                     </form>
                   )}
@@ -443,126 +532,55 @@ export function SettingsView() {
             )}
           </div>
 
-          {/* Theme & Appearance Card */}
-          <div className="bg-surface rounded-2xl border border-border p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-border/80">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center">
-                  {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-textPrimary tracking-tight">
-                    Appearance & Theme
-                  </h3>
-                  <p className="text-[11px] text-textMuted">
-                    Customize your interface style
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              {/* Light Theme Card */}
+          <div className="pt-4 border-t border-border/80">
+            {userProfile.isLoggedIn ? (
               <button
-                type="button"
-                onClick={() => toggleTheme(false)}
-                className={`p-3.5 rounded-xl border text-left transition relative flex flex-col justify-between ${
-                  !isDark
-                    ? "border-primary bg-primary/5 ring-1 ring-primary shadow-xs"
-                    : "border-border bg-background hover:border-slate-300"
-                }`}
+                onClick={handleSignOut}
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl border border-rose-200 dark:border-rose-900/60 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition active:scale-95"
               >
-                <div className="h-14 rounded-lg bg-[#F8FAFC] border border-slate-200 p-2 flex flex-col justify-between">
-                  <div className="h-2 w-12 rounded bg-slate-300" />
-                  <div className="flex gap-1.5">
-                    <div className="h-4 w-4 rounded bg-blue-500/30" />
-                    <div className="h-4 flex-1 rounded bg-slate-200" />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center gap-2">
-                    <Sun className="w-4 h-4 text-amber-500" />
-                    <span className="text-xs font-bold text-textPrimary">Light</span>
-                  </div>
-                  {!isDark && (
-                    <div className="w-4 h-4 rounded-full bg-primary text-white flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
-                    </div>
-                  )}
-                </div>
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out of Second Brain</span>
               </button>
-
-              {/* Dark Theme Card */}
-              <button
-                type="button"
-                onClick={() => toggleTheme(true)}
-                className={`p-3.5 rounded-xl border text-left transition relative flex flex-col justify-between ${
-                  isDark
-                    ? "border-primary bg-primary/5 ring-1 ring-primary shadow-xs"
-                    : "border-border bg-background hover:border-slate-300"
-                }`}
-              >
-                <div className="h-14 rounded-lg bg-[#0A0D14] border border-[#1E293B] p-2 flex flex-col justify-between">
-                  <div className="h-2 w-12 rounded bg-slate-700" />
-                  <div className="flex gap-1.5">
-                    <div className="h-4 w-4 rounded bg-blue-500/40" />
-                    <div className="h-4 flex-1 rounded bg-slate-800" />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center gap-2">
-                    <Moon className="w-4 h-4 text-blue-400" />
-                    <span className="text-xs font-bold text-textPrimary">Obsidian Dark</span>
-                  </div>
-                  {isDark && (
-                    <div className="w-4 h-4 rounded-full bg-primary text-white flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
-                    </div>
-                  )}
-                </div>
-              </button>
-            </div>
+            ) : (
+              <p className="text-[11px] text-textMuted text-center font-mono">
+                Guest sessions persist in browser local storage
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Right Column: Sync Engine & Data Management */}
-        <div className="space-y-6">
-          {/* Cloud Sync Status Card */}
-          <div className="bg-surface rounded-2xl border border-border p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-border/80">
+        {/* Column 2: Cloud Sync Engine & Storage Breakdown */}
+        <div className="bg-surface rounded-2xl border border-border p-6 shadow-xs flex flex-col justify-between h-full">
+          <div>
+            <div className="flex items-center justify-between pb-4 border-b border-border/80 mb-5">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                  <RefreshCw className={`w-4.5 h-4.5 ${isSyncing ? "animate-spin" : ""}`} />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-textPrimary tracking-tight">
-                    Sync & Storage
+                    Sync Engine
                   </h3>
-                  <p className="text-[11px] text-textMuted">
-                    Local-first continuous replication
-                  </p>
+                  <p className="text-[11px] text-textMuted">Local-first bidirectional sync</p>
                 </div>
               </div>
 
               <button
                 onClick={() => syncEngine.sync()}
                 disabled={isSyncing}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-primary hover:bg-primary-hover disabled:opacity-60 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover disabled:opacity-60 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
                 <span>{isSyncing ? "Syncing..." : "Sync Now"}</span>
               </button>
             </div>
 
-            {/* Sync Metadata Tiles */}
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <div className="p-3.5 rounded-xl bg-background border border-border">
-                <span className="text-[11px] text-textMuted font-medium block">
-                  Replication Status
-                </span>
-                <span className="text-xs font-bold text-textPrimary capitalize flex items-center gap-1.5 mt-1">
+            {/* Sync Status Cards */}
+            <div className="space-y-3 mb-5">
+              <div className="p-3.5 rounded-xl bg-background border border-border flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
                   <span
-                    className={`w-2 h-2 rounded-full ${
+                    className={`w-2.5 h-2.5 rounded-full ${
                       syncState === "synced"
                         ? "bg-emerald-500"
                         : syncState === "syncing"
@@ -570,86 +588,173 @@ export function SettingsView() {
                         : "bg-slate-400"
                     }`}
                   />
-                  <span>{syncMessage || syncState}</span>
-                </span>
-              </div>
+                  <div>
+                    <p className="text-xs font-bold text-textPrimary capitalize">
+                      {syncMessage || syncState}
+                    </p>
+                    <p className="text-[10px] text-textMuted">Sync engine status</p>
+                  </div>
+                </div>
 
-              <div className="p-3.5 rounded-xl bg-background border border-border">
-                <span className="text-[11px] text-textMuted font-medium block">
-                  Last Synced At
-                </span>
-                <span className="text-xs font-bold text-textPrimary mt-1 block">
-                  {lastSync ? new Date(lastSync).toLocaleTimeString() : "Never"}
-                </span>
+                <div className="text-right">
+                  <p className="text-xs font-mono font-bold text-textPrimary">
+                    {lastSync ? new Date(lastSync).toLocaleTimeString() : "Never"}
+                  </p>
+                  <p className="text-[10px] text-textMuted font-mono">Last timestamp</p>
+                </div>
               </div>
             </div>
 
-            {/* Local Storage Footprint */}
-            <div className="p-4 rounded-xl bg-background border border-border flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 text-textSecondary font-medium">
-                <Database className="w-4 h-4 text-primary" />
-                <span>Local Data Footprint</span>
+            {/* Local Vault Inventory Breakdown */}
+            <div className="space-y-2.5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-textSecondary px-1">
+                Local Vault Inventory
+              </h4>
+
+              <div className="p-3.5 rounded-xl bg-background border border-border flex items-center justify-between">
+                <span className="text-xs font-medium text-textPrimary">Active Tasks & Board</span>
+                <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
+                  {storageStats.tasks} items
+                </span>
               </div>
-              <div className="flex items-center gap-3 font-mono text-[11px] text-textMuted">
-                <span>{storageStats.tasks} tasks</span>
-                <span>•</span>
-                <span>{storageStats.ideas} ideas</span>
-                <span>•</span>
-                <span>{storageStats.learning} courses</span>
+
+              <div className="p-3.5 rounded-xl bg-background border border-border flex items-center justify-between">
+                <span className="text-xs font-medium text-textPrimary">Idea Vault & Sparks</span>
+                <span className="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
+                  {storageStats.ideas} notes
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-background border border-border flex items-center justify-between">
+                <span className="text-xs font-medium text-textPrimary">Learning Tracks & Courses</span>
+                <span className="font-mono text-xs font-bold text-teal-600 dark:text-teal-400">
+                  {storageStats.learning} tracks
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-background border border-border flex items-center justify-between">
+                <span className="text-xs font-medium text-textPrimary">Study Logs Recorded</span>
+                <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  {storageStats.sessions} sessions
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Data Backup & Restore */}
-          <div className="bg-surface rounded-2xl border border-border p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-border/80">
+          <div className="pt-4 border-t border-border/80 flex items-center justify-between text-xs text-textMuted">
+            <span className="flex items-center gap-1.5 font-medium">
+              <HardDrive className="w-3.5 h-3.5 text-primary" />
+              <span>Zero-loss mutation queue</span>
+            </span>
+            <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">100% Offline Ready</span>
+          </div>
+        </div>
+
+        {/* Column 3: Display Themes, Backups & Brand Spec */}
+        <div className="bg-surface rounded-2xl border border-border p-6 shadow-xs flex flex-col justify-between h-full">
+          <div>
+            <div className="flex items-center justify-between pb-4 border-b border-border/80 mb-5">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                  <Download className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center">
+                  <Laptop className="w-4.5 h-4.5" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-textPrimary tracking-tight">
-                    Data Portability & Backup
+                    Preferences & Vault
                   </h3>
-                  <p className="text-[11px] text-textMuted">
-                    Own your data without vendor lock-in
-                  </p>
+                  <p className="text-[11px] text-textMuted">Theme styles & portability</p>
                 </div>
               </div>
             </div>
 
-            <p className="text-xs text-textSecondary leading-relaxed">
-              Export an unencrypted JSON backup of all your notes, tasks, and study records. You can restore it anytime or migrate between machines.
-            </p>
+            {/* Theme Selector */}
+            <div className="space-y-3 mb-5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-textSecondary px-1">
+                Appearance Style
+              </h4>
 
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <button
-                onClick={handleExport}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surfaceHover hover:bg-border text-xs font-bold text-textPrimary border border-border transition active:scale-95"
-              >
-                <Download className="w-3.5 h-3.5 text-primary" />
-                <span>Export JSON</span>
-              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => toggleTheme(false)}
+                  className={`p-3 rounded-xl border text-left transition relative flex flex-col justify-between ${
+                    !isDark
+                      ? "border-primary bg-primary/5 ring-1 ring-primary shadow-xs"
+                      : "border-border bg-background hover:border-slate-300"
+                  }`}
+                >
+                  <div className="h-10 rounded-lg bg-[#F8FAFC] border border-slate-200 p-1.5 flex flex-col justify-between">
+                    <div className="h-1.5 w-10 rounded bg-slate-300" />
+                    <div className="h-2 w-full rounded bg-slate-200" />
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs font-bold text-textPrimary flex items-center gap-1.5">
+                      <Sun className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Light</span>
+                    </span>
+                    {!isDark && <Check className="w-3.5 h-3.5 text-primary stroke-[3]" />}
+                  </div>
+                </button>
 
-              <label className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-surface hover:bg-surfaceHover text-xs font-bold text-textPrimary cursor-pointer transition active:scale-95">
-                <Upload className="w-3.5 h-3.5 text-amber-500" />
-                <span>Restore Backup</span>
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleImport}
-                  className="hidden"
-                />
-              </label>
+                <button
+                  type="button"
+                  onClick={() => toggleTheme(true)}
+                  className={`p-3 rounded-xl border text-left transition relative flex flex-col justify-between ${
+                    isDark
+                      ? "border-primary bg-primary/5 ring-1 ring-primary shadow-xs"
+                      : "border-border bg-background hover:border-slate-300"
+                  }`}
+                >
+                  <div className="h-10 rounded-lg bg-[#0A0D14] border border-[#1E293B] p-1.5 flex flex-col justify-between">
+                    <div className="h-1.5 w-10 rounded bg-slate-700" />
+                    <div className="h-2 w-full rounded bg-slate-800" />
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs font-bold text-textPrimary flex items-center gap-1.5">
+                      <Moon className="w-3.5 h-3.5 text-blue-400" />
+                      <span>Obsidian</span>
+                    </span>
+                    {isDark && <Check className="w-3.5 h-3.5 text-primary stroke-[3]" />}
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Data Portability */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-textSecondary px-1">
+                Data Portability (JSON)
+              </h4>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleExport}
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-background hover:bg-surfaceHover text-xs font-bold text-textPrimary border border-border transition active:scale-95"
+                >
+                  <Download className="w-3.5 h-3.5 text-primary" />
+                  <span>Export JSON</span>
+                </button>
+
+                <label className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border bg-background hover:bg-surfaceHover text-xs font-bold text-textPrimary cursor-pointer transition active:scale-95">
+                  <Upload className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Restore JSON</span>
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleImport}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
           </div>
 
-          {/* About Second Brain */}
-          <div className="rounded-2xl border border-[#1E293B] bg-[#0A0D14] p-5 flex items-center justify-between text-white shadow-sm">
-            <BrandWordmark size="md" subtitle="Local-First Productivity OS" />
+          {/* About / Wordmark Tile */}
+          <div className="mt-5 rounded-2xl border border-[#1E293B] bg-[#0A0D14] p-4 flex items-center justify-between text-white shadow-sm">
+            <BrandWordmark size="md" subtitle="Offline-First OS" />
             <div className="text-right text-[11px] font-mono text-[#64748B]">
-              <p className="text-white font-bold">Second Brain v1.0.0</p>
-              <p className="text-emerald-400 mt-0.5">● Offline Engine Active</p>
+              <p className="text-white font-bold">Second Brain</p>
+              <p className="text-emerald-400 mt-0.5">● Linux & Android</p>
             </div>
           </div>
         </div>
