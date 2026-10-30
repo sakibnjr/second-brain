@@ -71,9 +71,6 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -109,12 +106,14 @@ jobs:
         with:
           name: linux-packages
           path: release-assets/
+        continue-on-error: true
 
       - name: Download Android artifacts
         uses: actions/download-artifact@v4
         with:
           name: android-packages
           path: release-assets/
+        continue-on-error: true
 
       - name: List Release Assets
         run: ls -la release-assets/
