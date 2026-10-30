@@ -182,7 +182,8 @@ export function IdeasView() {
         </form>
       )}
 
-      {/* Search Bar */}
+      {/* Search Bar (hidden when there are no ideas in this tab) */}
+      {ideas.some((i) => (tab === "archived" ? Boolean(i.archived_at) : !i.archived_at)) && (
       <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-border bg-surface text-textPrimary shadow-sm">
         <Search className="w-4 h-4 text-textMuted" />
         <input
@@ -193,6 +194,7 @@ export function IdeasView() {
           className="w-full bg-transparent text-xs text-textPrimary placeholder:text-textMuted focus:outline-none"
         />
       </div>
+      )}
 
       {/* Ideas Grid */}
       <div className={filteredIdeas.length === 0 ? "flex flex-1" : "grid grid-cols-1 md:grid-cols-2 gap-4"}>
