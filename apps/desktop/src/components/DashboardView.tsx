@@ -11,13 +11,21 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { syncEngine, SyncState } from "../lib/syncEngine";
+import {
+  TaskEmptyIllustration,
+  LearningEmptyIllustration,
+  IdeaEmptyIllustration,
+} from "./EmptyIllustrations";
 
 interface DashboardViewProps {
   onNavigate: (tab: any) => void;
   onOpenTaskModal: () => void;
 }
 
-export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProps) {
+export function DashboardView({
+  onNavigate,
+  onOpenTaskModal,
+}: DashboardViewProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [learning, setLearning] = useState<LearningResource[]>([]);
   const [ideas, setIdeas] = useState<Idea[]>([]);
@@ -95,72 +103,68 @@ export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProp
 
   return (
     <div className="space-y-6 w-full max-w-none">
-      {/* 1. Stat Cards at the VERY TOP */}
+      {/* 1. Stat Cards with Eye-Soothing Filled Colors & Solid Filled Icons */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+        {/* Card 1: Today's Tasks - Soothing Soft Periwinkle */}
         <div
           onClick={() => onNavigate("tasks")}
-          className="cursor-pointer p-4 rounded-2xl border border-border bg-surface hover:border-primary/60 hover:shadow-md transition group"
+          className="cursor-pointer p-5 rounded-2xl border border-blue-200/80 bg-blue-50/80 dark:bg-blue-950/25 dark:border-blue-900/60 hover:shadow-md transition-all group"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-textSecondary">
+            <span className="text-xs font-bold text-blue-900 dark:text-blue-300">
               Today's Tasks
             </span>
-            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition">
-              <CheckSquare className="w-4 h-4" />
-            </div>
+            <CheckSquare className="w-5 h-5 text-blue-600 dark:text-blue-400 fill-blue-600/30 group-hover:scale-110 transition" />
           </div>
-          <div className="text-2xl font-extrabold text-textPrimary mt-2">
+          <div className="text-3xl font-black text-blue-950 dark:text-blue-100 mt-3 font-mono">
             {todayTasks.length}
           </div>
         </div>
 
+        {/* Card 2: Overdue - Soothing Soft Coral/Blush */}
         <div
           onClick={() => onNavigate("tasks")}
-          className="cursor-pointer p-4 rounded-2xl border border-border bg-surface hover:border-rose-500/60 hover:shadow-md transition group"
+          className="cursor-pointer p-5 rounded-2xl border border-rose-200/80 bg-rose-50/80 dark:bg-rose-950/25 dark:border-rose-900/60 hover:shadow-md transition-all group"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-rose-500">
+            <span className="text-xs font-bold text-rose-900 dark:text-rose-300">
               Overdue
             </span>
-            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 group-hover:scale-110 transition">
-              <Clock className="w-4 h-4" />
-            </div>
+            <Clock className="w-5 h-5 text-rose-600 dark:text-rose-400 fill-rose-600/30 group-hover:scale-110 transition" />
           </div>
-          <div className="text-2xl font-extrabold text-rose-600 mt-2">
+          <div className="text-3xl font-black text-rose-950 dark:text-rose-100 mt-3 font-mono">
             {overdueTasks.length}
           </div>
         </div>
 
+        {/* Card 3: Active Courses - Soothing Soft Sage/Teal */}
         <div
           onClick={() => onNavigate("learning")}
-          className="cursor-pointer p-4 rounded-2xl border border-border bg-surface hover:border-teal-500/60 hover:shadow-md transition group"
+          className="cursor-pointer p-5 rounded-2xl border border-emerald-200/80 bg-emerald-50/80 dark:bg-emerald-950/25 dark:border-emerald-900/60 hover:shadow-md transition-all group"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-textSecondary">
+            <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300">
               Active Courses
             </span>
-            <div className="p-2 rounded-xl bg-teal-500/10 text-teal-600 group-hover:scale-110 transition">
-              <GraduationCap className="w-4 h-4" />
-            </div>
+            <GraduationCap className="w-5 h-5 text-emerald-600 dark:text-emerald-400 fill-emerald-600/30 group-hover:scale-110 transition" />
           </div>
-          <div className="text-2xl font-extrabold text-textPrimary mt-2">
+          <div className="text-3xl font-black text-emerald-950 dark:text-emerald-100 mt-3 font-mono">
             {inProgressLearning.length}
           </div>
         </div>
 
+        {/* Card 4: Ideas Captured - Soothing Soft Warm Honey */}
         <div
           onClick={() => onNavigate("ideas")}
-          className="cursor-pointer p-4 rounded-2xl border border-border bg-surface hover:border-amber-500/60 hover:shadow-md transition group"
+          className="cursor-pointer p-5 rounded-2xl border border-amber-200/80 bg-amber-50/80 dark:bg-amber-950/25 dark:border-amber-900/60 hover:shadow-md transition-all group"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-textSecondary">
+            <span className="text-xs font-bold text-amber-900 dark:text-amber-300">
               Ideas Captured
             </span>
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 group-hover:scale-110 transition">
-              <Lightbulb className="w-4 h-4" />
-            </div>
+            <Lightbulb className="w-5 h-5 text-amber-600 dark:text-amber-400 fill-amber-600/40 group-hover:scale-110 transition" />
           </div>
-          <div className="text-2xl font-extrabold text-textPrimary mt-2">
+          <div className="text-3xl font-black text-amber-950 dark:text-amber-100 mt-3 font-mono">
             {ideas.length}
           </div>
         </div>
@@ -185,9 +189,9 @@ export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProp
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border border-border bg-background">
             <span
-              className={`w-2 h-2 rounded-full ${
+              className={`w-2.5 h-2.5 rounded-full ${
                 syncState === "synced"
-                  ? "bg-emerald-500"
+                  ? "bg-emerald-500 shadow-sm shadow-emerald-500/50"
                   : syncState === "syncing"
                   ? "bg-amber-500 animate-pulse"
                   : "bg-blue-500"
@@ -241,13 +245,13 @@ export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProp
         </button>
       </form>
 
-      {/* 3 Same-Size Columns Layout (Tasks, Learning, Ideas) */}
+      {/* 3. 3-Column Layout with Premium Illustrations */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
         {/* Column 1: Today's Tasks */}
-        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[380px]">
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[420px]">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
             <h3 className="text-sm font-bold text-textPrimary flex items-center gap-2">
-              <CheckSquare className="w-4 h-4 text-primary" />
+              <CheckSquare className="w-4 h-4 text-primary fill-primary/20" />
               <span>Today's Tasks</span>
             </h3>
             <button
@@ -260,13 +264,19 @@ export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProp
 
           <div className="flex-1 overflow-y-auto space-y-2">
             {todayTasks.length === 0 && overdueTasks.length === 0 ? (
-              <div className="py-16 text-center text-xs text-textMuted flex flex-col items-center justify-center h-full">
-                <span>🎉 No pending tasks due today.</span>
+              <div className="py-10 text-center flex flex-col items-center justify-center h-full">
+                <TaskEmptyIllustration />
+                <p className="text-xs font-semibold text-textPrimary">
+                  All caught up for today!
+                </p>
+                <p className="text-[11px] text-textMuted mt-1 max-w-[200px]">
+                  No pending tasks due today. Plan your day by scheduling a new task.
+                </p>
                 <button
                   onClick={onOpenTaskModal}
-                  className="mt-2 text-primary font-semibold hover:underline"
+                  className="mt-3.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition"
                 >
-                  + Create a task
+                  + Add New Task
                 </button>
               </div>
             ) : (
@@ -335,10 +345,10 @@ export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProp
         </div>
 
         {/* Column 2: Learning Focus */}
-        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[380px]">
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[420px]">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
             <h3 className="text-sm font-bold text-textPrimary flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-teal-600" />
+              <GraduationCap className="w-4 h-4 text-teal-600 fill-teal-600/20" />
               <span>Learning Focus</span>
             </h3>
             <button
@@ -351,13 +361,19 @@ export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProp
 
           <div className="flex-1 overflow-y-auto space-y-3">
             {inProgressLearning.length === 0 ? (
-              <div className="py-16 text-center text-xs text-textMuted flex flex-col items-center justify-center h-full">
-                <span>No active courses.</span>
+              <div className="py-10 text-center flex flex-col items-center justify-center h-full">
+                <LearningEmptyIllustration />
+                <p className="text-xs font-semibold text-textPrimary">
+                  No courses active
+                </p>
+                <p className="text-[11px] text-textMuted mt-1 max-w-[200px]">
+                  Track tutorials, books, and courses you are studying.
+                </p>
                 <button
                   onClick={() => onNavigate("learning")}
-                  className="mt-2 text-primary font-semibold hover:underline"
+                  className="mt-3.5 px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-600 hover:bg-teal-500/20 text-xs font-semibold transition"
                 >
-                  + Add course
+                  + Add Learning Resource
                 </button>
               </div>
             ) : (
@@ -398,10 +414,10 @@ export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProp
         </div>
 
         {/* Column 3: Recent Ideas */}
-        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[380px]">
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[420px]">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
             <h3 className="text-sm font-bold text-textPrimary flex items-center gap-2">
-              <Lightbulb className="w-4 h-4 text-amber-500" />
+              <Lightbulb className="w-4 h-4 text-amber-500 fill-amber-500/20" />
               <span>Recent Ideas</span>
             </h3>
             <button
@@ -414,13 +430,19 @@ export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProp
 
           <div className="flex-1 overflow-y-auto space-y-2.5">
             {recentIdeas.length === 0 ? (
-              <div className="py-16 text-center text-xs text-textMuted flex flex-col items-center justify-center h-full">
-                <span>No ideas captured yet.</span>
+              <div className="py-10 text-center flex flex-col items-center justify-center h-full">
+                <IdeaEmptyIllustration />
+                <p className="text-xs font-semibold text-textPrimary">
+                  No ideas captured yet
+                </p>
+                <p className="text-[11px] text-textMuted mt-1 max-w-[200px]">
+                  Got a spark of inspiration? Capture your quick thoughts anytime.
+                </p>
                 <button
                   onClick={() => onNavigate("ideas")}
-                  className="mt-2 text-primary font-semibold hover:underline"
+                  className="mt-3.5 px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 text-xs font-semibold transition"
                 >
-                  + Quick note
+                  + Capture Quick Idea
                 </button>
               </div>
             ) : (

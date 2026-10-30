@@ -10,6 +10,7 @@ import {
   Circle,
 } from "lucide-react";
 import { TaskModal } from "./TaskModal";
+import { CalendarEmptyIllustration } from "./EmptyIllustrations";
 
 export function CalendarView() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -160,11 +161,14 @@ export function CalendarView() {
           </div>
 
           {tasksOnSelectedDate.length === 0 ? (
-            <div className="py-12 text-center text-xs text-textMuted border border-dashed border-border rounded-xl">
-              No tasks scheduled for this date.
+            <div className="py-12 text-center border border-dashed border-border rounded-2xl flex flex-col items-center justify-center">
+              <CalendarEmptyIllustration />
+              <p className="text-xs font-semibold text-textPrimary">
+                No tasks scheduled for {selectedDate}
+              </p>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="block mx-auto mt-2 text-primary font-semibold hover:underline"
+                className="mt-3 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition"
               >
                 + Schedule a task
               </button>

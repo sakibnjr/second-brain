@@ -7,9 +7,9 @@ import {
   Trash2,
   Tag,
   Plus,
-  Inbox,
   Check,
 } from "lucide-react";
+import { IdeaEmptyIllustration } from "./EmptyIllustrations";
 
 export function IdeasView() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
@@ -197,10 +197,13 @@ export function IdeasView() {
       {/* Ideas Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredIdeas.length === 0 ? (
-          <div className="col-span-full py-16 text-center border border-dashed border-border rounded-2xl bg-surface/30">
-            <Inbox className="w-8 h-8 text-textMuted mx-auto mb-2 opacity-50" />
-            <p className="text-sm font-medium text-textSecondary">
-              No ideas in {tab}.
+          <div className="col-span-full py-16 text-center border border-dashed border-border rounded-2xl bg-surface/30 flex flex-col items-center justify-center">
+            <IdeaEmptyIllustration />
+            <p className="text-sm font-semibold text-textPrimary">
+              No ideas in {tab}
+            </p>
+            <p className="text-xs text-textMuted mt-1">
+              Capture your thoughts using the quick capture bar above.
             </p>
           </div>
         ) : (

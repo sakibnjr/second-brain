@@ -15,6 +15,7 @@ import {
   GripVertical,
 } from "lucide-react";
 import { TaskModal } from "./TaskModal";
+import { TaskEmptyIllustration } from "./EmptyIllustrations";
 
 type FilterTab = "all" | "today" | "upcoming" | "completed";
 type ViewMode = "board" | "list";
@@ -400,10 +401,13 @@ export function TasksView() {
       {viewMode === "list" && (
         <div className="space-y-2.5 w-full">
           {filteredTasks.length === 0 ? (
-            <div className="p-16 text-center rounded-2xl border border-dashed border-border bg-surface/30">
-              <CheckCircle2 className="w-8 h-8 text-textMuted mx-auto mb-2 opacity-50" />
-              <p className="text-sm font-medium text-textSecondary">
-                No tasks found in {activeTab}.
+            <div className="py-16 text-center rounded-2xl border border-dashed border-border bg-surface/30 flex flex-col items-center justify-center">
+              <TaskEmptyIllustration />
+              <p className="text-sm font-semibold text-textPrimary">
+                No tasks found in {activeTab}
+              </p>
+              <p className="text-xs text-textMuted mt-1">
+                Create a task above or switch views to organize.
               </p>
             </div>
           ) : (

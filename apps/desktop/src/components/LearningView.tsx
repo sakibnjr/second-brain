@@ -8,12 +8,12 @@ import { Storage, generateUUID } from "../lib/storage";
 import {
   Plus,
   ExternalLink,
-  BookOpen,
   Timer,
   Trash2,
   X,
   History,
 } from "lucide-react";
+import { LearningEmptyIllustration } from "./EmptyIllustrations";
 
 export function LearningView() {
   const [resources, setResources] = useState<LearningResource[]>([]);
@@ -151,12 +151,12 @@ export function LearningView() {
           </h3>
 
           {resources.length === 0 ? (
-            <div className="p-8 text-center border border-dashed border-border rounded-2xl bg-surface/30">
-              <BookOpen className="w-8 h-8 text-textMuted mx-auto mb-2 opacity-50" />
-              <p className="text-xs text-textSecondary">No resources yet.</p>
+            <div className="p-8 text-center border border-dashed border-border rounded-2xl bg-surface/30 flex flex-col items-center justify-center">
+              <LearningEmptyIllustration />
+              <p className="text-xs font-semibold text-textPrimary">No resources yet</p>
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="mt-3 text-xs text-primary font-semibold hover:underline"
+                className="mt-3 px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-600 hover:bg-teal-500/20 text-xs font-semibold transition"
               >
                 + Add your first course
               </button>
