@@ -16,9 +16,7 @@ import {
   Library,
   Clock,
   CheckCircle2,
-  Layers,
 } from "lucide-react";
-import { LearningEmptyIllustration } from "./EmptyIllustrations";
 
 type StatusFilter = "all" | LearningStatus;
 
@@ -258,38 +256,129 @@ export function LearningView() {
   return (
     <div className="flex flex-col flex-1 w-full max-w-none gap-6 min-h-0">
       {resources.length === 0 ? (
-        /* Full-page premium empty state */
-        <div className="flex-1 min-h-[480px] bg-surface rounded-2xl border border-border shadow-xs flex flex-col items-center justify-center text-center p-10">
-          <LearningEmptyIllustration />
-          <h3 className="text-base font-bold text-textPrimary mt-2">
-            Build your learning library
-          </h3>
-          <p className="text-xs text-textSecondary mt-1.5 max-w-sm leading-relaxed">
-            Add courses, books and tutorials, track progress as you go, and log
-            every study session in one place.
-          </p>
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="mt-5 flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add your first course</span>
-          </button>
-          <div className="mt-8 grid grid-cols-3 gap-3 w-full max-w-lg">
-            {[
-              { i: Library, t: "Collect", d: "Courses, books, links" },
-              { i: Layers, t: "Track", d: "Progress & status" },
-              { i: Timer, t: "Log", d: "Study sessions" },
-            ].map(({ i: Icon, t, d }) => (
-              <div
-                key={t}
-                className="p-3 rounded-xl bg-background border border-border text-left"
-              >
-                <Icon className="w-4 h-4 text-primary fill-primary/20" />
-                <p className="text-xs font-bold text-textPrimary mt-2">{t}</p>
-                <p className="text-[11px] text-textMuted">{d}</p>
+        /* Full-page premium empty state: pitch on the left, live product preview on the right */
+        <div className="relative flex-1 min-h-[520px] bg-surface rounded-2xl border border-border shadow-xs overflow-hidden">
+          {/* Ambient background */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-blue-500/10 blur-3xl" />
+            <div className="absolute -bottom-32 -right-16 w-[28rem] h-[28rem] rounded-full bg-teal-500/10 blur-3xl" />
+            <div
+              className="absolute inset-0 opacity-[0.5] dark:opacity-[0.15]"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle, rgba(148,163,184,0.35) 1px, transparent 1px)",
+                backgroundSize: "22px 22px",
+                maskImage:
+                  "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+                WebkitMaskImage:
+                  "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+              }}
+            />
+          </div>
+
+          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-10 items-center h-full p-8 lg:p-14">
+            {/* Pitch */}
+            <div className="max-w-md">
+              <span className="inline-flex items-center gap-2 text-[11px] font-bold text-teal-700 dark:text-teal-300 bg-teal-500/10 border border-teal-500/20 px-3 py-1 rounded-full">
+                <GraduationCap className="w-3.5 h-3.5 fill-teal-500/30" />
+                Learning library
+              </span>
+              <h3 className="mt-5 text-3xl lg:text-4xl font-black tracking-tight text-textPrimary leading-[1.1]">
+                Learn with intent.
+                <br />
+                <span className="text-textMuted">Remember what you study.</span>
+              </h3>
+              <p className="mt-4 text-sm text-textSecondary leading-relaxed">
+                Keep every course, book and playlist in one calm place. Track how far
+                you've come and log each study session.
+              </p>
+
+              <div className="mt-7 flex items-center gap-3">
+                <button
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="flex items-center gap-2 px-5 py-3 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-lg shadow-primary/25 transition active:scale-95"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add your first course</span>
+                </button>
               </div>
-            ))}
+
+              <div className="mt-8">
+                <p className="text-[11px] font-semibold text-textMuted uppercase tracking-wider mb-2.5">
+                  Quick start
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {["Online course", "Book", "Video playlist", "Documentation"].map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => {
+                        setProvider(t);
+                        setIsAddModalOpen(true);
+                      }}
+                      className="px-3.5 py-1.5 text-xs font-semibold text-textSecondary bg-surface/80 backdrop-blur border border-border rounded-full hover:border-primary/50 hover:text-primary transition"
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Product preview */}
+            <div className="relative hidden lg:block h-[380px]" aria-hidden="true">
+              {/* back card */}
+              <div className="absolute top-2 right-2 w-[88%] p-5 rounded-2xl bg-surface border border-border shadow-md opacity-60 scale-[0.96] origin-top-right">
+                <div className="flex items-center justify-between">
+                  <div className="h-3 w-36 rounded-full bg-surfaceHover" />
+                  <div className="h-5 w-16 rounded-full bg-emerald-500/15" />
+                </div>
+                <div className="mt-4 h-1.5 w-full rounded-full bg-surfaceHover overflow-hidden">
+                  <div className="h-full w-full bg-emerald-500 rounded-full" />
+                </div>
+              </div>
+
+              {/* main card */}
+              <div className="absolute top-14 left-0 w-[92%] p-6 rounded-2xl bg-surface border border-border shadow-2xl shadow-slate-900/10">
+                <div className="flex items-start gap-5">
+                  <ProgressRing percent={64} size={84} />
+                  <div className="flex-1 min-w-0">
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      In progress
+                    </span>
+                    <p className="mt-2 text-base font-bold text-textPrimary tracking-tight">
+                      Distributed Systems in Rust
+                    </p>
+                    <p className="text-xs text-textSecondary mt-0.5">Coursera</p>
+                  </div>
+                </div>
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl bg-background border border-border">
+                    <p className="text-[10px] text-textMuted font-medium">Sessions</p>
+                    <p className="text-lg font-black font-mono text-textPrimary">12</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-background border border-border">
+                    <p className="text-[10px] text-textMuted font-medium">Time studied</p>
+                    <p className="text-lg font-black font-mono text-textPrimary">8h 30m</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* floating chip */}
+              <div className="absolute bottom-6 right-4 flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-surface border border-border shadow-xl">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-600 flex items-center justify-center">
+                  <Timer className="w-4 h-4 fill-amber-600/30" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-textPrimary">+45 min logged</p>
+                  <p className="text-[10px] text-textMuted">Chapter 4 · Consensus</p>
+                </div>
+              </div>
+
+              <span className="absolute -bottom-1 left-1 text-[10px] font-semibold uppercase tracking-wider text-textMuted">
+                Sample preview
+              </span>
+            </div>
           </div>
         </div>
       ) : (
