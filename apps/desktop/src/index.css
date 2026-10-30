@@ -4,26 +4,28 @@
 
 @layer base {
   :root {
-    --color-bg: #FAFAFA;
+    /* Rich slate canvas background so white cards pop with crisp depth */
+    --color-bg: #F1F5F9;
     --color-surface: #FFFFFF;
-    --color-surface-hover: #F4F4F5;
-    --color-border: #E4E4E7;
-    --color-text-primary: #18181B;
-    --color-text-secondary: #71717A;
-    --color-text-muted: #A1A1AA;
+    --color-surface-hover: #F8FAFC;
+    --color-border: #E2E8F0;
+    --color-text-primary: #0F172A;
+    --color-text-secondary: #475569;
+    --color-text-muted: #94A3B8;
     --color-primary: #2563EB;
     --color-primary-hover: #1D4ED8;
     --color-primary-foreground: #FFFFFF;
   }
 
   .dark {
-    --color-bg: #09090B;
-    --color-surface: #18181B;
-    --color-surface-hover: #27272A;
-    --color-border: #27272A;
-    --color-text-primary: #FAFAFA;
-    --color-text-secondary: #A1A1AA;
-    --color-text-muted: #71717A;
+    /* Deep obsidian canvas background with elevated surface cards */
+    --color-bg: #07090E;
+    --color-surface: #111827;
+    --color-surface-hover: #1F2937;
+    --color-border: #1F2937;
+    --color-text-primary: #F8FAFC;
+    --color-text-secondary: #94A3B8;
+    --color-text-muted: #64748B;
     --color-primary: #3B82F6;
     --color-primary-hover: #60A5FA;
     --color-primary-foreground: #FFFFFF;

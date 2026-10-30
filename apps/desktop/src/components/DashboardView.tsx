@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import { Task, LearningResource, Idea } from "@planner/contracts";
 import { Storage, generateUUID } from "../lib/storage";
+import { supabase } from "../lib/supabase";
 import {
   CheckSquare,
   Clock,
   GraduationCap,
   Lightbulb,
   Plus,
-  RefreshCw,
   ExternalLink,
+  ArrowUpRight,
+  User,
+  Sparkles,
 } from "lucide-react";
-import { syncEngine, SyncState } from "../lib/syncEngine";
 import {
   TaskEmptyIllustration,
   LearningEmptyIllustration,
@@ -30,8 +32,19 @@ export function DashboardView({
   const [learning, setLearning] = useState<LearningResource[]>([]);
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [quickTitle, setQuickTitle] = useState("");
-  const [syncState, setSyncState] = useState<SyncState>("idle");
-  const [syncMsg, setSyncMsg] = useState<string>("");
+
+  // User Profile
+  const [userProfile, setUserProfile] = useState<{
+    name: string;
+    avatarUrl: string | null;
+    email: string | null;
+    isLoggedIn: boolean;
+  }>({
+    name: "Guest",
+    avatarUrl: null,
+    email: null,
+    isLoggedIn: false,
+  });
 
   const refreshData = () => {
     setTasks(Storage.getTasks());
@@ -41,12 +54,57 @@ export function DashboardView({
 
   useEffect(() => {
     refreshData();
-    const unsub = syncEngine.subscribe((state, msg) => {
-      setSyncState(state);
-      if (msg) setSyncMsg(msg);
-      if (state === "synced") refreshData();
+
+    // Check Supabase user
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        const meta = data.user.user_metadata || {};
+        const name =
+          meta.full_name ||
+          meta.name ||
+          data.user.email?.split("@")[0] ||
+          "User";
+        const avatar = meta.avatar_url || meta.picture || null;
+        setUserProfile({
+          name,
+          avatarUrl: avatar,
+          email: data.user.email || null,
+          isLoggedIn: true,
+        });
+      }
     });
-    return unsub;
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session?.user) {
+          const meta = session.user.user_metadata || {};
+          const name =
+            meta.full_name ||
+            meta.name ||
+            session.user.email?.split("@")[0] ||
+            "User";
+          const avatar = meta.avatar_url || meta.picture || null;
+          setUserProfile({
+            name,
+            avatarUrl: avatar,
+            email: session.user.email || null,
+            isLoggedIn: true,
+          });
+          refreshData();
+        } else {
+          setUserProfile({
+            name: "Guest",
+            avatarUrl: null,
+            email: null,
+            isLoggedIn: false,
+          });
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const handleQuickAdd = (e: React.FormEvent) => {
@@ -103,12 +161,12 @@ export function DashboardView({
 
   return (
     <div className="space-y-6 w-full max-w-none">
-      {/* 1. Stat Cards with Eye-Soothing Filled Colors & Solid Filled Icons */}
+      {/* 1. Stat Cards at the VERY TOP with Soothing Pastel Colors */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-        {/* Card 1: Today's Tasks - Soothing Soft Periwinkle */}
+        {/* Card 1: Today's Tasks */}
         <div
           onClick={() => onNavigate("tasks")}
-          className="cursor-pointer p-5 rounded-2xl border border-blue-200/80 bg-blue-50/80 dark:bg-blue-950/25 dark:border-blue-900/60 hover:shadow-md transition-all group"
+          className="cursor-pointer p-5 rounded-2xl border border-blue-200/80 bg-blue-50/90 dark:bg-blue-950/25 dark:border-blue-900/60 hover:shadow-md transition-all group shadow-xs"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-blue-900 dark:text-blue-300">
@@ -121,10 +179,10 @@ export function DashboardView({
           </div>
         </div>
 
-        {/* Card 2: Overdue - Soothing Soft Coral/Blush */}
+        {/* Card 2: Overdue */}
         <div
           onClick={() => onNavigate("tasks")}
-          className="cursor-pointer p-5 rounded-2xl border border-rose-200/80 bg-rose-50/80 dark:bg-rose-950/25 dark:border-rose-900/60 hover:shadow-md transition-all group"
+          className="cursor-pointer p-5 rounded-2xl border border-rose-200/80 bg-rose-50/90 dark:bg-rose-950/25 dark:border-rose-900/60 hover:shadow-md transition-all group shadow-xs"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-rose-900 dark:text-rose-300">
@@ -137,10 +195,10 @@ export function DashboardView({
           </div>
         </div>
 
-        {/* Card 3: Active Courses - Soothing Soft Sage/Teal */}
+        {/* Card 3: Active Courses */}
         <div
           onClick={() => onNavigate("learning")}
-          className="cursor-pointer p-5 rounded-2xl border border-emerald-200/80 bg-emerald-50/80 dark:bg-emerald-950/25 dark:border-emerald-900/60 hover:shadow-md transition-all group"
+          className="cursor-pointer p-5 rounded-2xl border border-emerald-200/80 bg-emerald-50/90 dark:bg-emerald-950/25 dark:border-emerald-900/60 hover:shadow-md transition-all group shadow-xs"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300">
@@ -153,10 +211,10 @@ export function DashboardView({
           </div>
         </div>
 
-        {/* Card 4: Ideas Captured - Soothing Soft Warm Honey */}
+        {/* Card 4: Ideas Captured */}
         <div
           onClick={() => onNavigate("ideas")}
-          className="cursor-pointer p-5 rounded-2xl border border-amber-200/80 bg-amber-50/80 dark:bg-amber-950/25 dark:border-amber-900/60 hover:shadow-md transition-all group"
+          className="cursor-pointer p-5 rounded-2xl border border-amber-200/80 bg-amber-50/90 dark:bg-amber-950/25 dark:border-amber-900/60 hover:shadow-md transition-all group shadow-xs"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-amber-900 dark:text-amber-300">
@@ -170,57 +228,75 @@ export function DashboardView({
         </div>
       </div>
 
-      {/* 2. Today's Planner Banner & Sync trigger */}
+      {/* 2. User Greeting Banner (No Sync text; shows User DP + Name + Date) */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-surface border border-border rounded-2xl p-5 shadow-sm">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-textPrimary">
-            Today's Planner
-          </h2>
-          <p className="text-xs text-textSecondary mt-0.5">
-            {new Date().toLocaleDateString(undefined, {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
+        <div className="flex items-center gap-4">
+          {userProfile.avatarUrl ? (
+            <img
+              src={userProfile.avatarUrl}
+              alt={userProfile.name}
+              className="w-13 h-13 rounded-2xl object-cover ring-2 ring-primary/20 shadow-md"
+            />
+          ) : (
+            <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-blue-500/20">
+              {userProfile.isLoggedIn ? (
+                userProfile.name.charAt(0).toUpperCase()
+              ) : (
+                <User className="w-6 h-6" />
+              )}
+            </div>
+          )}
+
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold tracking-tight text-textPrimary">
+                {userProfile.isLoggedIn
+                  ? `Welcome back, ${userProfile.name}!`
+                  : "Hello, Guest 👋"}
+              </h2>
+              {userProfile.isLoggedIn && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                  <Sparkles className="w-3 h-3" />
+                  <span>Google Synced</span>
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-textSecondary font-medium mt-0.5">
+              {new Date().toLocaleDateString(undefined, {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border border-border bg-background">
-            <span
-              className={`w-2.5 h-2.5 rounded-full ${
-                syncState === "synced"
-                  ? "bg-emerald-500 shadow-sm shadow-emerald-500/50"
-                  : syncState === "syncing"
-                  ? "bg-amber-500 animate-pulse"
-                  : "bg-blue-500"
-              }`}
-            />
-            <span className="text-textSecondary capitalize">
-              {syncMsg || syncState}
-            </span>
-          </span>
-
-          <button
-            onClick={() => syncEngine.sync()}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surfaceHover hover:bg-border text-xs font-semibold text-textPrimary transition"
-            title="Synchronize with Supabase"
-          >
-            <RefreshCw
-              className={`w-3.5 h-3.5 ${
-                syncState === "syncing" ? "animate-spin text-primary" : ""
-              }`}
-            />
-            <span>Sync</span>
-          </button>
+        <div>
+          {!userProfile.isLoggedIn ? (
+            <button
+              onClick={() => onNavigate("settings")}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-semibold shadow-sm transition active:scale-95"
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Connect Google Account</span>
+            </button>
+          ) : (
+            <button
+              onClick={onOpenTaskModal}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surfaceHover hover:bg-border text-xs font-semibold text-textPrimary transition"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Quick Plan</span>
+            </button>
+          )}
         </div>
       </div>
 
       {/* Quick Add Bar */}
       <form
         onSubmit={handleQuickAdd}
-        className="flex items-center gap-2 p-2 bg-surface rounded-xl border border-border shadow-sm focus-within:ring-2 focus-within:ring-primary transition"
+        className="flex items-center gap-2 p-2 bg-surface rounded-2xl border border-border shadow-sm focus-within:ring-2 focus-within:ring-primary transition"
       >
         <input
           type="text"
@@ -231,7 +307,7 @@ export function DashboardView({
         />
         <button
           type="submit"
-          className="flex items-center gap-1 bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-3 py-2 rounded-lg transition"
+          className="flex items-center gap-1 bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-3 py-2 rounded-xl transition"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Add</span>
@@ -239,26 +315,40 @@ export function DashboardView({
         <button
           type="button"
           onClick={onOpenTaskModal}
-          className="px-3 py-2 text-xs font-medium text-textSecondary hover:bg-surfaceHover rounded-lg transition"
+          className="px-3 py-2 text-xs font-medium text-textSecondary hover:bg-surfaceHover rounded-xl transition"
         >
           Full Details
         </button>
       </form>
 
-      {/* 3. 3-Column Layout with Premium Illustrations */}
+      {/* 3. Redesigned Premium 3-Column Layout */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
         {/* Column 1: Today's Tasks */}
-        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[420px]">
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
-            <h3 className="text-sm font-bold text-textPrimary flex items-center gap-2">
-              <CheckSquare className="w-4 h-4 text-primary fill-primary/20" />
-              <span>Today's Tasks</span>
-            </h3>
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[420px] transition hover:shadow-md">
+          {/* Premium Header */}
+          <div className="flex items-center justify-between pb-3.5 border-b border-border/80 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 flex items-center justify-center shadow-xs">
+                <CheckSquare className="w-5 h-5 fill-blue-500/30" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-textPrimary tracking-tight">
+                    Today's Focus
+                  </h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono">
+                    {todayTasks.length}
+                  </span>
+                </div>
+                <p className="text-[11px] text-textMuted">Priority tasks scheduled</p>
+              </div>
+            </div>
             <button
               onClick={() => onNavigate("tasks")}
-              className="text-xs font-semibold text-primary hover:underline"
+              className="p-1.5 rounded-lg text-textMuted hover:bg-surfaceHover hover:text-primary transition"
+              title="Open Tasks"
             >
-              View all ({tasks.length})
+              <ArrowUpRight className="w-4 h-4" />
             </button>
           </div>
 
@@ -274,7 +364,7 @@ export function DashboardView({
                 </p>
                 <button
                   onClick={onOpenTaskModal}
-                  className="mt-3.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition"
+                  className="mt-3.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition"
                 >
                   + Add New Task
                 </button>
@@ -345,17 +435,31 @@ export function DashboardView({
         </div>
 
         {/* Column 2: Learning Focus */}
-        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[420px]">
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
-            <h3 className="text-sm font-bold text-textPrimary flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-teal-600 fill-teal-600/20" />
-              <span>Learning Focus</span>
-            </h3>
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[420px] transition hover:shadow-md">
+          {/* Premium Header */}
+          <div className="flex items-center justify-between pb-3.5 border-b border-border/80 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 flex items-center justify-center shadow-xs">
+                <GraduationCap className="w-5 h-5 fill-teal-500/30" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-textPrimary tracking-tight">
+                    Learning Focus
+                  </h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 font-mono">
+                    {inProgressLearning.length} Active
+                  </span>
+                </div>
+                <p className="text-[11px] text-textMuted">Courses & study goals</p>
+              </div>
+            </div>
             <button
               onClick={() => onNavigate("learning")}
-              className="text-xs font-semibold text-primary hover:underline"
+              className="p-1.5 rounded-lg text-textMuted hover:bg-surfaceHover hover:text-teal-600 transition"
+              title="Open Learning"
             >
-              Tracker ({learning.length})
+              <ArrowUpRight className="w-4 h-4" />
             </button>
           </div>
 
@@ -371,7 +475,7 @@ export function DashboardView({
                 </p>
                 <button
                   onClick={() => onNavigate("learning")}
-                  className="mt-3.5 px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-600 hover:bg-teal-500/20 text-xs font-semibold transition"
+                  className="mt-3.5 px-3 py-1.5 rounded-xl bg-teal-500/10 text-teal-600 hover:bg-teal-500/20 text-xs font-semibold transition"
                 >
                   + Add Learning Resource
                 </button>
@@ -414,17 +518,31 @@ export function DashboardView({
         </div>
 
         {/* Column 3: Recent Ideas */}
-        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[420px]">
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
-            <h3 className="text-sm font-bold text-textPrimary flex items-center gap-2">
-              <Lightbulb className="w-4 h-4 text-amber-500 fill-amber-500/20" />
-              <span>Recent Ideas</span>
-            </h3>
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[420px] transition hover:shadow-md">
+          {/* Premium Header */}
+          <div className="flex items-center justify-between pb-3.5 border-b border-border/80 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center shadow-xs">
+                <Lightbulb className="w-5 h-5 fill-amber-500/30" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-textPrimary tracking-tight">
+                    Idea Vault
+                  </h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono">
+                    {ideas.length} Saved
+                  </span>
+                </div>
+                <p className="text-[11px] text-textMuted">Sparks & quick notes</p>
+              </div>
+            </div>
             <button
               onClick={() => onNavigate("ideas")}
-              className="text-xs font-semibold text-primary hover:underline"
+              className="p-1.5 rounded-lg text-textMuted hover:bg-surfaceHover hover:text-amber-600 transition"
+              title="Open Ideas"
             >
-              Inbox ({ideas.length})
+              <ArrowUpRight className="w-4 h-4" />
             </button>
           </div>
 
@@ -440,7 +558,7 @@ export function DashboardView({
                 </p>
                 <button
                   onClick={() => onNavigate("ideas")}
-                  className="mt-3.5 px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 text-xs font-semibold transition"
+                  className="mt-3.5 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 text-xs font-semibold transition"
                 >
                   + Capture Quick Idea
                 </button>
