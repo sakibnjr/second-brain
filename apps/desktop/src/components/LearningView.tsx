@@ -134,13 +134,15 @@ export function LearningView() {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-xl shadow-sm transition"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Course/Resource</span>
-        </button>
+        {resources.length > 0 && (
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-xl shadow-sm transition"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Course/Resource</span>
+          </button>
+        )}
       </div>
 
       {resources.length === 0 ? (

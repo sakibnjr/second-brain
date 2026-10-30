@@ -161,17 +161,14 @@ export function CalendarView() {
           </div>
 
           {tasksOnSelectedDate.length === 0 ? (
-            <div className="flex-1 min-h-[260px] text-center border border-dashed border-border rounded-2xl flex flex-col items-center justify-center">
+            <div className="flex-1 min-h-[260px] text-center border border-dashed border-border rounded-2xl flex flex-col items-center justify-center p-6">
               <CalendarEmptyIllustration />
               <p className="text-xs font-semibold text-textPrimary">
                 No tasks scheduled for {selectedDate}
               </p>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="mt-3 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition"
-              >
-                + Schedule a task
-              </button>
+              <p className="text-[11px] text-textMuted mt-1">
+                Plan ahead by adding a task for this day
+              </p>
             </div>
           ) : (
             <div className="space-y-2.5">

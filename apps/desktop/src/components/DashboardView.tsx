@@ -113,7 +113,7 @@ export function DashboardView({
               <CheckSquare className="w-4 h-4 fill-blue-600/30" />
             </div>
           </div>
-          <div className="text-3xl font-black text-blue-950 dark:text-blue-100 font-mono tracking-tight my-2">
+          <div className="text-2xl font-bold text-blue-950 dark:text-blue-100 font-mono tracking-tight my-1.5">
             {todayTasks.length}
           </div>
           <div className="text-[11px] font-medium text-blue-700/80 dark:text-blue-300/80">
@@ -134,7 +134,7 @@ export function DashboardView({
               <Clock className="w-4 h-4 fill-rose-600/30" />
             </div>
           </div>
-          <div className="text-3xl font-black text-rose-950 dark:text-rose-100 font-mono tracking-tight my-2">
+          <div className="text-2xl font-bold text-rose-950 dark:text-rose-100 font-mono tracking-tight my-1.5">
             {overdueTasks.length}
           </div>
           <div className="text-[11px] font-medium text-rose-700/80 dark:text-rose-300/80">
@@ -155,7 +155,7 @@ export function DashboardView({
               <GraduationCap className="w-4 h-4 fill-emerald-600/30" />
             </div>
           </div>
-          <div className="text-3xl font-black text-emerald-950 dark:text-emerald-100 font-mono tracking-tight my-2">
+          <div className="text-2xl font-bold text-emerald-950 dark:text-emerald-100 font-mono tracking-tight my-1.5">
             {inProgressLearning.length}
           </div>
           <div className="text-[11px] font-medium text-emerald-700/80 dark:text-emerald-300/80">
@@ -176,7 +176,7 @@ export function DashboardView({
               <Lightbulb className="w-4 h-4 fill-amber-600/40" />
             </div>
           </div>
-          <div className="text-3xl font-black text-amber-950 dark:text-amber-100 font-mono tracking-tight my-2">
+          <div className="text-2xl font-bold text-amber-950 dark:text-amber-100 font-mono tracking-tight my-1.5">
             {ideas.length}
           </div>
           <div className="text-[11px] font-medium text-amber-700/80 dark:text-amber-300/80">

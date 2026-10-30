@@ -283,7 +283,7 @@ export function SettingsView() {
               <User className="w-4 h-4 fill-blue-600/30" />
             </div>
           </div>
-          <div className="text-2xl font-black text-blue-950 dark:text-blue-100 tracking-tight my-1.5 truncate">
+          <div className="text-2xl font-bold text-blue-950 dark:text-blue-100 tracking-tight my-1.5 truncate">
             {userProfile.isLoggedIn ? userProfile.name : "Guest Mode"}
           </div>
           <div className="text-[11px] font-medium text-blue-700/80 dark:text-blue-300/80 truncate">
@@ -301,7 +301,7 @@ export function SettingsView() {
               <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
             </div>
           </div>
-          <div className="text-2xl font-black text-emerald-950 dark:text-emerald-100 font-mono tracking-tight my-1.5 capitalize">
+          <div className="text-2xl font-bold text-emerald-950 dark:text-emerald-100 font-mono tracking-tight my-1.5 capitalize">
             {syncMessage || syncState}
           </div>
           <div className="text-[11px] font-medium text-emerald-700/80 dark:text-emerald-300/80">
@@ -319,7 +319,7 @@ export function SettingsView() {
               <Database className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-purple-950 dark:text-purple-100 font-mono tracking-tight my-1.5">
+          <div className="text-2xl font-bold text-purple-950 dark:text-purple-100 font-mono tracking-tight my-1.5">
             {totalItems} items
           </div>
           <div className="text-[11px] font-medium text-purple-700/80 dark:text-purple-300/80">
@@ -337,7 +337,7 @@ export function SettingsView() {
               {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </div>
           </div>
-          <div className="text-2xl font-black text-amber-950 dark:text-amber-100 tracking-tight my-1.5">
+          <div className="text-2xl font-bold text-amber-950 dark:text-amber-100 tracking-tight my-1.5">
             {isDark ? "Obsidian Dark" : "Pure Light"}
           </div>
           <div className="text-[11px] font-medium text-amber-700/80 dark:text-amber-300/80">

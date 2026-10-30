@@ -282,23 +282,15 @@ export default function App() {
 
           {/* Right Header Actions */}
           <div className="flex items-center gap-3">
-            {!userProfile.isLoggedIn && (
+            {!userProfile.isLoggedIn && activeTab !== "settings" && (
               <button
                 onClick={() => setActiveTab("settings")}
-                className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border hover:bg-surfaceHover text-xs font-semibold text-textSecondary transition"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border hover:bg-surfaceHover text-xs font-semibold text-textSecondary transition"
               >
                 <User className="w-3.5 h-3.5" />
                 <span>Sign In</span>
               </button>
             )}
-
-            <button
-              onClick={() => setIsQuickAddModalOpen(true)}
-              className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition active:scale-95"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Task</span>
-            </button>
           </div>
         </header>
 
