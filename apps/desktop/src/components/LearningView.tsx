@@ -12,13 +12,88 @@ import {
   Trash2,
   X,
   History,
+  GraduationCap,
+  Library,
+  Clock,
+  CheckCircle2,
+  Layers,
 } from "lucide-react";
 import { LearningEmptyIllustration } from "./EmptyIllustrations";
 
+type StatusFilter = "all" | LearningStatus;
+
+const STATUS_STYLE: Record<
+  LearningStatus,
+  { label: string; pill: string; dot: string; bar: string }
+> = {
+  planned: {
+    label: "Planned",
+    pill: "bg-slate-500/10 text-slate-600 dark:text-slate-300",
+    dot: "bg-slate-400",
+    bar: "bg-slate-400",
+  },
+  in_progress: {
+    label: "In progress",
+    pill: "bg-blue-500/10 text-blue-600 dark:text-blue-300",
+    dot: "bg-blue-500",
+    bar: "bg-blue-500",
+  },
+  paused: {
+    label: "Paused",
+    pill: "bg-amber-500/10 text-amber-600 dark:text-amber-300",
+    dot: "bg-amber-500",
+    bar: "bg-amber-500",
+  },
+  completed: {
+    label: "Completed",
+    pill: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+    bar: "bg-emerald-500",
+  },
+};
+
+const formatMinutes = (m: number) =>
+  m < 60 ? `${m}m` : `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}`;
+
+function ProgressRing({ percent, size = 76 }: { percent: number; size?: number }) {
+  const stroke = 7;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          strokeWidth={stroke}
+          className="stroke-surfaceHover"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c - (c * percent) / 100}
+          className="stroke-primary transition-all duration-500"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center text-sm font-black font-mono text-textPrimary">
+        {percent}%
+      </div>
+    </div>
+  );
+}
+
 export function LearningView() {
   const [resources, setResources] = useState<LearningResource[]>([]);
-  const [selectedResource, setSelectedResource] = useState<LearningResource | null>(null);
-  const [sessions, setSessions] = useState<StudySession[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<StatusFilter>("all");
+  const [minutesByResource, setMinutesByResource] = useState<Record<string, number>>({});
 
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -37,22 +112,33 @@ export function LearningView() {
   const loadData = () => {
     const list = Storage.getLearningResources();
     setResources(list);
-    if (selectedResource) {
-      setSessions(Storage.getStudySessions(selectedResource.id));
-    } else if (list.length > 0) {
-      setSelectedResource(list[0]);
-      setSessions(Storage.getStudySessions(list[0].id));
-    }
+    const mins: Record<string, number> = {};
+    list.forEach((r) => {
+      mins[r.id] = Storage.getStudySessions(r.id).reduce(
+        (sum, s) => sum + s.duration_minutes,
+        0
+      );
+    });
+    setMinutesByResource(mins);
+    setSelectedId((prev) =>
+      prev && list.some((r) => r.id === prev) ? prev : list[0]?.id ?? null
+    );
   };
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const handleSelectResource = (res: LearningResource) => {
-    setSelectedResource(res);
-    setSessions(Storage.getStudySessions(res.id));
-  };
+  const selected = resources.find((r) => r.id === selectedId) || null;
+  const sessions: StudySession[] = selected
+    ? Storage.getStudySessions(selected.id)
+    : [];
+
+  const totalMinutes = Object.values(minutesByResource).reduce((a, b) => a + b, 0);
+  const inProgressCount = resources.filter((r) => r.status === "in_progress").length;
+  const completedCount = resources.filter((r) => r.status === "completed").length;
+
+  const visible = resources.filter((r) => filter === "all" || r.status === filter);
 
   const handleCreateResource = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,8 +163,9 @@ export function LearningView() {
     setUrl("");
     setProvider("");
     setIsAddModalOpen(false);
-    setSelectedResource(newRes);
+    setSelectedId(newRes.id);
     loadData();
+    setSelectedId(newRes.id);
   };
 
   const handleProgressChange = (res: LearningResource, percent: number) => {
@@ -93,19 +180,16 @@ export function LearningView() {
 
   const handleDeleteResource = (id: string) => {
     Storage.deleteLearningResource(id);
-    if (selectedResource?.id === id) {
-      setSelectedResource(null);
-    }
     loadData();
   };
 
   const handleLogSession = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedResource) return;
+    if (!selected) return;
 
     const newSession: StudySession = {
       id: generateUUID(),
-      resource_id: selectedResource.id,
+      resource_id: selected.id,
       started_at: new Date().toISOString(),
       duration_minutes: Number(durationMinutes),
       notes: sessionNotes.trim() || null,
@@ -118,213 +202,366 @@ export function LearningView() {
     Storage.saveStudySession(newSession);
     setSessionNotes("");
     setIsLogSessionModalOpen(false);
-    setSessions(Storage.getStudySessions(selectedResource.id));
+    loadData();
   };
 
+  const statCards = [
+    {
+      label: "Resources",
+      value: resources.length,
+      hint: "courses, books & more",
+      icon: Library,
+      card: "border-blue-200/80 bg-blue-50/90 dark:bg-blue-950/25 dark:border-blue-900/60",
+      text: "text-blue-900/80 dark:text-blue-300",
+      num: "text-blue-950 dark:text-blue-100",
+      chip: "bg-blue-500/15 text-blue-600 dark:text-blue-400 fill-blue-600/30",
+    },
+    {
+      label: "In Progress",
+      value: inProgressCount,
+      hint: "currently studying",
+      icon: GraduationCap,
+      card: "border-teal-200/80 bg-teal-50/90 dark:bg-teal-950/25 dark:border-teal-900/60",
+      text: "text-teal-900/80 dark:text-teal-300",
+      num: "text-teal-950 dark:text-teal-100",
+      chip: "bg-teal-500/15 text-teal-600 dark:text-teal-400 fill-teal-600/30",
+    },
+    {
+      label: "Completed",
+      value: completedCount,
+      hint: "finished resources",
+      icon: CheckCircle2,
+      card: "border-emerald-200/80 bg-emerald-50/90 dark:bg-emerald-950/25 dark:border-emerald-900/60",
+      text: "text-emerald-900/80 dark:text-emerald-300",
+      num: "text-emerald-950 dark:text-emerald-100",
+      chip: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 fill-emerald-600/30",
+    },
+    {
+      label: "Study Time",
+      value: formatMinutes(totalMinutes),
+      hint: "total logged",
+      icon: Clock,
+      card: "border-amber-200/80 bg-amber-50/90 dark:bg-amber-950/25 dark:border-amber-900/60",
+      text: "text-amber-900/80 dark:text-amber-300",
+      num: "text-amber-950 dark:text-amber-100",
+      chip: "bg-amber-500/15 text-amber-600 dark:text-amber-400 fill-amber-600/40",
+    },
+  ];
+
+  const filters: { id: StatusFilter; label: string }[] = [
+    { id: "all", label: "All" },
+    { id: "in_progress", label: "Active" },
+    { id: "planned", label: "Planned" },
+    { id: "completed", label: "Done" },
+  ];
+
   return (
-    <div className="space-y-6 w-full max-w-none">
-      {/* Top Controls */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-textPrimary">
-            Learning Tracker
-          </h2>
-          <p className="text-xs text-textSecondary mt-0.5">
-            Track courses, reading lists, study sessions, and progress.
-          </p>
-        </div>
-
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-xl shadow-sm transition"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Course/Resource</span>
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Resources List */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-textSecondary px-1">
-            My Courses & Resources ({resources.length})
+    <div className="flex flex-col flex-1 w-full max-w-none gap-6 min-h-0">
+      {resources.length === 0 ? (
+        /* Full-page premium empty state */
+        <div className="flex-1 min-h-[480px] bg-surface rounded-2xl border border-border shadow-xs flex flex-col items-center justify-center text-center p-10">
+          <LearningEmptyIllustration />
+          <h3 className="text-base font-bold text-textPrimary mt-2">
+            Build your learning library
           </h3>
-
-          {resources.length === 0 ? (
-            <div className="p-8 text-center border border-dashed border-border rounded-2xl bg-surface/30 flex flex-col items-center justify-center">
-              <LearningEmptyIllustration />
-              <p className="text-xs font-semibold text-textPrimary">No resources yet</p>
-              <button
-                onClick={() => setIsAddModalOpen(true)}
-                className="mt-3 px-3 py-1.5 rounded-lg bg-teal-500/10 text-teal-600 hover:bg-teal-500/20 text-xs font-semibold transition"
+          <p className="text-xs text-textSecondary mt-1.5 max-w-sm leading-relaxed">
+            Add courses, books and tutorials, track progress as you go, and log
+            every study session in one place.
+          </p>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="mt-5 flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-95"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add your first course</span>
+          </button>
+          <div className="mt-8 grid grid-cols-3 gap-3 w-full max-w-lg">
+            {[
+              { i: Library, t: "Collect", d: "Courses, books, links" },
+              { i: Layers, t: "Track", d: "Progress & status" },
+              { i: Timer, t: "Log", d: "Study sessions" },
+            ].map(({ i: Icon, t, d }) => (
+              <div
+                key={t}
+                className="p-3 rounded-xl bg-background border border-border text-left"
               >
-                + Add your first course
-              </button>
-            </div>
-          ) : (
-            resources.map((res) => {
-              const isSelected = selectedResource?.id === res.id;
+                <Icon className="w-4 h-4 text-primary fill-primary/20" />
+                <p className="text-xs font-bold text-textPrimary mt-2">{t}</p>
+                <p className="text-[11px] text-textMuted">{d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Summary stats */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 w-full shrink-0">
+            {statCards.map((c) => {
+              const Icon = c.icon;
               return (
                 <div
-                  key={res.id}
-                  onClick={() => handleSelectResource(res)}
-                  className={`p-4 rounded-xl border bg-surface cursor-pointer transition space-y-2.5 ${
-                    isSelected
-                      ? "border-primary ring-1 ring-primary shadow-sm"
-                      : "border-border hover:border-primary/50"
-                  }`}
+                  key={c.label}
+                  className={`p-5 rounded-2xl border shadow-xs flex flex-col justify-between ${c.card}`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <h4 className="text-sm font-semibold text-textPrimary break-words">
-                      {res.title}
-                    </h4>
-                    <span
-                      className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded ${
-                        res.status === "completed"
-                          ? "bg-emerald-500/10 text-emerald-600"
-                          : res.status === "in_progress"
-                          ? "bg-blue-500/10 text-blue-600"
-                          : res.status === "paused"
-                          ? "bg-amber-500/10 text-amber-600"
-                          : "bg-surfaceHover text-textSecondary"
-                      }`}
-                    >
-                      {res.status.replace("_", " ")}
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-bold uppercase tracking-wider ${c.text}`}>
+                      {c.label}
                     </span>
-                  </div>
-
-                  {/* Progress bar */}
-                  <div>
-                    <div className="flex justify-between text-[11px] text-textSecondary mb-1 font-mono">
-                      <span>{res.provider || "Self-study"}</span>
-                      <span>{res.progress_percent}%</span>
-                    </div>
-                    <div className="w-full bg-surfaceHover h-1.5 rounded-full overflow-hidden">
-                      <div
-                        className="bg-primary h-full rounded-full transition-all"
-                        style={{ width: `${res.progress_percent}%` }}
-                      />
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${c.chip}`}>
+                      <Icon className="w-4 h-4" />
                     </div>
                   </div>
+                  <div className={`text-3xl font-black font-mono tracking-tight my-2 ${c.num}`}>
+                    {c.value}
+                  </div>
+                  <div className={`text-[11px] font-medium ${c.text}`}>{c.hint}</div>
                 </div>
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
 
-        {/* Right Column: Selected Resource Details & Session History */}
-        <div className="lg:col-span-2">
-          {selectedResource ? (
-            <div className="p-6 rounded-2xl border border-border bg-surface shadow-sm space-y-6">
-              <div className="flex items-start justify-between gap-4 pb-4 border-b border-border">
-                <div className="space-y-1">
-                  <h3 className="text-lg font-bold text-textPrimary">
-                    {selectedResource.title}
-                  </h3>
-                  <div className="flex items-center gap-3 text-xs text-textSecondary">
-                    {selectedResource.provider && (
-                      <span className="font-medium">
-                        Provider: {selectedResource.provider}
-                      </span>
-                    )}
-                    {selectedResource.url && (
-                      <a
-                        href={selectedResource.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1 text-primary hover:underline font-medium"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Open Link</span>
-                      </a>
-                    )}
+          {/* Master / detail */}
+          <div className="grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)] gap-6 flex-1 min-h-[460px]">
+            {/* Library list */}
+            <div className="bg-surface rounded-2xl border border-border shadow-xs flex flex-col min-h-0">
+              <div className="p-5 pb-4 border-b border-border/80 shrink-0 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-textPrimary tracking-tight">
+                      My Library
+                    </h3>
+                    <p className="text-[11px] text-textMuted">
+                      {visible.length} of {resources.length} resources
+                    </p>
                   </div>
+                  <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add</span>
+                  </button>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setIsLogSessionModalOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg shadow-sm transition"
-                  >
-                    <Timer className="w-3.5 h-3.5" />
-                    <span>Log Study Time</span>
-                  </button>
-                  <button
-                    onClick={() => handleDeleteResource(selectedResource.id)}
-                    className="p-1.5 rounded-lg text-textMuted hover:bg-rose-500/10 hover:text-rose-600 transition"
-                    title="Delete Resource"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                <div className="flex items-center p-1 bg-background border border-border rounded-xl">
+                  {filters.map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => setFilter(f.id)}
+                      className={`flex-1 px-2 py-1.5 text-[11px] font-semibold rounded-lg transition ${
+                        filter === f.id
+                          ? "bg-surface text-textPrimary shadow-xs"
+                          : "text-textMuted hover:text-textPrimary"
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Progress Slider */}
-              <div className="p-4 rounded-xl bg-background border border-border space-y-2">
-                <div className="flex justify-between items-center text-xs font-semibold text-textPrimary">
-                  <span>Current Progress</span>
-                  <span className="font-mono text-primary">
-                    {selectedResource.progress_percent}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={selectedResource.progress_percent}
-                  onChange={(e) =>
-                    handleProgressChange(selectedResource, Number(e.target.value))
-                  }
-                  className="w-full accent-primary cursor-pointer"
-                />
-              </div>
-
-              {/* Study Sessions History */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-textSecondary flex items-center gap-2">
-                  <History className="w-3.5 h-3.5" />
-                  <span>Study Session Logs ({sessions.length})</span>
-                </h4>
-
-                {sessions.length === 0 ? (
-                  <p className="text-xs text-textMuted py-4 text-center border border-dashed border-border rounded-xl">
-                    No sessions logged yet. Click "Log Study Time" after a study session!
+              <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
+                {visible.length === 0 ? (
+                  <p className="text-xs text-textMuted text-center py-10">
+                    Nothing in this filter yet.
                   </p>
                 ) : (
-                  <div className="space-y-2">
-                    {sessions.map((s) => (
-                      <div
-                        key={s.id}
-                        className="p-3 rounded-xl border border-border bg-background flex items-center justify-between text-xs"
+                  visible.map((res) => {
+                    const isSelected = selected?.id === res.id;
+                    const st = STATUS_STYLE[res.status];
+                    return (
+                      <button
+                        key={res.id}
+                        onClick={() => setSelectedId(res.id)}
+                        className={`w-full text-left p-4 rounded-xl border transition space-y-3 ${
+                          isSelected
+                            ? "border-primary/60 bg-primary/5 ring-1 ring-primary/30"
+                            : "border-transparent bg-background hover:border-border"
+                        }`}
                       >
-                        <div>
-                          <p className="font-medium text-textPrimary">
-                            {s.duration_minutes} minutes
-                          </p>
-                          {s.notes && (
-                            <p className="text-textSecondary text-[11px] mt-0.5">
-                              {s.notes}
-                            </p>
-                          )}
+                        <div className="flex items-start justify-between gap-3">
+                          <h4 className="text-[13px] font-semibold text-textPrimary break-words leading-snug">
+                            {res.title}
+                          </h4>
+                          <span
+                            className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${st.pill}`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
+                            {st.label}
+                          </span>
                         </div>
-                        <span className="text-[11px] font-mono text-textMuted">
-                          {new Date(s.started_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                        <div>
+                          <div className="flex justify-between text-[11px] text-textSecondary mb-1.5">
+                            <span>{res.provider || "Self-study"}</span>
+                            <span className="font-mono font-semibold">
+                              {res.progress_percent}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-surfaceHover h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${st.bar}`}
+                              style={{ width: `${res.progress_percent}%` }}
+                            />
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })
                 )}
               </div>
             </div>
-          ) : (
-            <div className="p-16 text-center border border-dashed border-border rounded-2xl bg-surface/30">
-              <p className="text-sm text-textMuted">
-                Select a course from the list to view progress and session history.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+
+            {/* Detail */}
+            {selected ? (
+              <div className="bg-surface rounded-2xl border border-border shadow-xs flex flex-col min-h-0">
+                <div className="p-6 border-b border-border/80 shrink-0 flex items-start gap-5">
+                  <ProgressRing percent={selected.progress_percent} />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <span
+                      className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLE[selected.status].pill}`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_STYLE[selected.status].dot}`} />
+                      {STATUS_STYLE[selected.status].label}
+                    </span>
+                    <h3 className="text-lg font-bold text-textPrimary tracking-tight leading-tight break-words">
+                      {selected.title}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-textSecondary">
+                      <span className="font-medium">{selected.provider || "Self-study"}</span>
+                      {selected.url && (
+                        <a
+                          href={selected.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1 text-primary hover:underline font-medium"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Open link</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => setIsLogSessionModalOpen(true)}
+                      className="flex items-center gap-2 px-3.5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95"
+                    >
+                      <Timer className="w-3.5 h-3.5" />
+                      <span>Log Study Time</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteResource(selected.id)}
+                      className="p-2 rounded-xl text-textMuted hover:bg-rose-500/10 hover:text-rose-600 transition"
+                      title="Delete resource"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
+                  {/* Progress control */}
+                  <div className="p-4 rounded-xl bg-background border border-border space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-textPrimary">Update progress</span>
+                      <div className="flex items-center gap-1.5">
+                        {[0, 25, 50, 75, 100].map((p) => (
+                          <button
+                            key={p}
+                            onClick={() => handleProgressChange(selected, p)}
+                            className={`px-2 py-1 text-[10px] font-bold font-mono rounded-md transition ${
+                              selected.progress_percent === p
+                                ? "bg-primary text-white"
+                                : "bg-surface border border-border text-textSecondary hover:text-textPrimary"
+                            }`}
+                          >
+                            {p}%
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={selected.progress_percent}
+                      onChange={(e) =>
+                        handleProgressChange(selected, Number(e.target.value))
+                      }
+                      className="w-full accent-primary cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Mini stats */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-background border border-border">
+                      <p className="text-[11px] text-textMuted font-medium">Sessions</p>
+                      <p className="text-xl font-black font-mono text-textPrimary mt-1">
+                        {sessions.length}
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-background border border-border">
+                      <p className="text-[11px] text-textMuted font-medium">Time studied</p>
+                      <p className="text-xl font-black font-mono text-textPrimary mt-1">
+                        {formatMinutes(minutesByResource[selected.id] || 0)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Session history */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-textSecondary flex items-center gap-2">
+                      <History className="w-3.5 h-3.5" />
+                      <span>Study sessions</span>
+                    </h4>
+                    {sessions.length === 0 ? (
+                      <div className="py-8 text-center border border-dashed border-border rounded-xl">
+                        <p className="text-xs font-semibold text-textPrimary">
+                          No sessions logged yet
+                        </p>
+                        <p className="text-[11px] text-textMuted mt-1">
+                          Use “Log Study Time” after your next study session.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {sessions.map((s) => (
+                          <div
+                            key={s.id}
+                            className="p-3.5 rounded-xl border border-border bg-background flex items-center justify-between gap-4"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-600 flex items-center justify-center shrink-0">
+                                <Timer className="w-4 h-4 fill-amber-600/30" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-textPrimary">
+                                  {formatMinutes(s.duration_minutes)}
+                                </p>
+                                {s.notes && (
+                                  <p className="text-[11px] text-textSecondary truncate">
+                                    {s.notes}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-[11px] font-mono text-textMuted shrink-0">
+                              {new Date(s.started_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-surface rounded-2xl border border-dashed border-border flex items-center justify-center text-xs text-textMuted">
+                Select a resource to see details.
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Add Resource Modal */}
       {isAddModalOpen && (
