@@ -95,7 +95,78 @@ export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProp
 
   return (
     <div className="space-y-6 w-full max-w-none">
-      {/* Top Banner & Sync trigger */}
+      {/* 1. Stat Cards at the VERY TOP */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+        <div
+          onClick={() => onNavigate("tasks")}
+          className="cursor-pointer p-4 rounded-2xl border border-border bg-surface hover:border-primary/60 hover:shadow-md transition group"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-textSecondary">
+              Today's Tasks
+            </span>
+            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition">
+              <CheckSquare className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-extrabold text-textPrimary mt-2">
+            {todayTasks.length}
+          </div>
+        </div>
+
+        <div
+          onClick={() => onNavigate("tasks")}
+          className="cursor-pointer p-4 rounded-2xl border border-border bg-surface hover:border-rose-500/60 hover:shadow-md transition group"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-rose-500">
+              Overdue
+            </span>
+            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 group-hover:scale-110 transition">
+              <Clock className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-extrabold text-rose-600 mt-2">
+            {overdueTasks.length}
+          </div>
+        </div>
+
+        <div
+          onClick={() => onNavigate("learning")}
+          className="cursor-pointer p-4 rounded-2xl border border-border bg-surface hover:border-teal-500/60 hover:shadow-md transition group"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-textSecondary">
+              Active Courses
+            </span>
+            <div className="p-2 rounded-xl bg-teal-500/10 text-teal-600 group-hover:scale-110 transition">
+              <GraduationCap className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-extrabold text-textPrimary mt-2">
+            {inProgressLearning.length}
+          </div>
+        </div>
+
+        <div
+          onClick={() => onNavigate("ideas")}
+          className="cursor-pointer p-4 rounded-2xl border border-border bg-surface hover:border-amber-500/60 hover:shadow-md transition group"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-textSecondary">
+              Ideas Captured
+            </span>
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 group-hover:scale-110 transition">
+              <Lightbulb className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-extrabold text-textPrimary mt-2">
+            {ideas.length}
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Today's Planner Banner & Sync trigger */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-surface border border-border rounded-2xl p-5 shadow-sm">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-textPrimary">
@@ -139,69 +210,6 @@ export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProp
             />
             <span>Sync</span>
           </button>
-        </div>
-      </div>
-
-      {/* Metrics Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div
-          onClick={() => onNavigate("tasks")}
-          className="cursor-pointer p-4 rounded-xl border border-border bg-surface hover:border-primary transition group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-textSecondary">
-              Today's Tasks
-            </span>
-            <CheckSquare className="w-4 h-4 text-primary group-hover:scale-110 transition" />
-          </div>
-          <div className="text-2xl font-bold text-textPrimary mt-2">
-            {todayTasks.length}
-          </div>
-        </div>
-
-        <div
-          onClick={() => onNavigate("tasks")}
-          className="cursor-pointer p-4 rounded-xl border border-border bg-surface hover:border-rose-500 transition group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-rose-500">
-              Overdue
-            </span>
-            <Clock className="w-4 h-4 text-rose-500 group-hover:scale-110 transition" />
-          </div>
-          <div className="text-2xl font-bold text-rose-600 mt-2">
-            {overdueTasks.length}
-          </div>
-        </div>
-
-        <div
-          onClick={() => onNavigate("learning")}
-          className="cursor-pointer p-4 rounded-xl border border-border bg-surface hover:border-teal-500 transition group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-textSecondary">
-              Active Courses
-            </span>
-            <GraduationCap className="w-4 h-4 text-teal-600 group-hover:scale-110 transition" />
-          </div>
-          <div className="text-2xl font-bold text-textPrimary mt-2">
-            {inProgressLearning.length}
-          </div>
-        </div>
-
-        <div
-          onClick={() => onNavigate("ideas")}
-          className="cursor-pointer p-4 rounded-xl border border-border bg-surface hover:border-amber-500 transition group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-textSecondary">
-              Ideas Captured
-            </span>
-            <Lightbulb className="w-4 h-4 text-amber-500 group-hover:scale-110 transition" />
-          </div>
-          <div className="text-2xl font-bold text-textPrimary mt-2">
-            {ideas.length}
-          </div>
         </div>
       </div>
 
