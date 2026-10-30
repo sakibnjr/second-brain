@@ -17,6 +17,7 @@ import { CalendarView } from "./components/CalendarView";
 import { SettingsView } from "./components/SettingsView";
 import { TaskModal } from "./components/TaskModal";
 import { syncEngine, SyncState } from "./lib/syncEngine";
+import { supabase } from "./lib/supabase";
 
 type NavTab =
   | "dashboard"
@@ -37,7 +38,19 @@ export default function App() {
     const unsub = syncEngine.subscribe((state) => {
       setSyncState(state);
     });
-    return unsub;
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === "SIGNED_IN" && session) {
+          syncEngine.sync();
+        }
+      }
+    );
+
+    return () => {
+      unsub();
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const navItems = [
