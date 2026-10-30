@@ -8,9 +8,9 @@
     "apps/desktop"
   ],
   "scripts": {
-    "desktop:dev": "npm --workspace=apps/desktop run dev",
-    "desktop:build": "npm --workspace=apps/desktop run build",
-    "contracts:build": "npm --workspace=packages/contracts run build"
+    "desktop:dev": "npm --prefix apps/desktop run dev",
+    "desktop:build": "npm --prefix apps/desktop run build",
+    "contracts:build": "npm --prefix packages/contracts run build"
   },
   "keywords": [
     "planner",

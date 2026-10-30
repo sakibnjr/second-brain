@@ -10,7 +10,8 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@planner/contracts": "*",
+    "@planner/contracts": "file:../../packages/contracts",
+    "@supabase/supabase-js": "^2.45.4",
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-notification": "^2.0.0",
     "@tauri-apps/plugin-sql": "^2.0.0",
