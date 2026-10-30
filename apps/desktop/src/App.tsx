@@ -6,7 +6,6 @@ import {
   Calendar,
   Settings,
   LayoutDashboard,
-  Cloud,
   Plus,
   User,
 } from "lucide-react";
@@ -18,7 +17,7 @@ import { CalendarView } from "./components/CalendarView";
 import { SettingsView } from "./components/SettingsView";
 import { TaskModal } from "./components/TaskModal";
 import { BrandWordmark } from "./components/BrandWordmark";
-import { syncEngine, SyncState } from "./lib/syncEngine";
+import { syncEngine } from "./lib/syncEngine";
 import { supabase } from "./lib/supabase";
 
 type NavTab =
@@ -81,7 +80,6 @@ function UserAvatar({
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>("dashboard");
   const [isQuickAddModalOpen, setIsQuickAddModalOpen] = useState(false);
-  const [syncState, setSyncState] = useState<SyncState>("idle");
 
   const [userProfile, setUserProfile] = useState<{
     name: string;
@@ -143,9 +141,6 @@ export default function App() {
 
   useEffect(() => {
     syncEngine.sync();
-    const unsub = syncEngine.subscribe((state) => {
-      setSyncState(state);
-    });
 
     // Initial user load
     supabase.auth.getUser().then(({ data }) => {
@@ -173,7 +168,6 @@ export default function App() {
     );
 
     return () => {
-      unsub();
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -194,20 +188,7 @@ export default function App() {
         <div>
           {/* Brand Header - exactly h-20 to match Main Header */}
           <div className="h-20 flex items-center justify-between px-5 border-b border-[#1E293B]">
-            <BrandWordmark subtitle="Offline OS" />
-
-            <span
-              className={`flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded-full border ${
-                syncState === "synced"
-                  ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
-                  : syncState === "syncing"
-                  ? "border-amber-500/30 text-amber-400 bg-amber-500/10 animate-pulse"
-                  : "border-[#334155] text-[#94A3B8] bg-[#0F172A]"
-              }`}
-            >
-              <Cloud className="w-3 h-3" />
-              <span className="capitalize">{syncState}</span>
-            </span>
+            <BrandWordmark />
           </div>
 
           {/* Navigation Links */}

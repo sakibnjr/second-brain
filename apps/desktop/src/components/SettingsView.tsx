@@ -436,7 +436,7 @@ export function SettingsView() {
 
       {/* About Second Brain */}
       <div className="p-6 rounded-2xl border border-border bg-surface shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <BrandWordmark size="md" subtitle="Offline-First Personal Operating System" />
+        <BrandWordmark size="md" />
         <div className="sm:text-right font-mono text-[11px] text-textMuted">
           <p>Second Brain v1.0.0 (Local-First)</p>
           <p className="text-[10px] text-emerald-600 mt-0.5">● Linux & Android Sync Active</p>

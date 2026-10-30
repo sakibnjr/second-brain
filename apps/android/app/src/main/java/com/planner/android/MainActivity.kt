@@ -75,13 +75,13 @@ fun MainScreen() {
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Second Brain - Workspace",
+                            text = "Second Brain",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Offline-first scaffold initialized. Connected to shared data contracts and design tokens.",
+                            text = "Never lose a thought.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
