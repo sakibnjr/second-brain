@@ -99,7 +99,7 @@ export function DashboardView({
   return (
     <div className="flex flex-col flex-1 w-full max-w-none space-y-6 min-h-0">
       {/* 1. Stat Cards with Balanced Structure & Helpful Context */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4.5 w-full shrink-0">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 w-full shrink-0">
         {/* Card 1: Today's Tasks */}
         <div
           onClick={() => onNavigate("tasks")}
