@@ -1,0 +1,20 @@
+[package]
+name = "personal-planner-desktop"
+version = "0.1.0"
+description = "Personal Planner Desktop Application"
+authors = ["Sakib"]
+edition = "2021"
+
+[lib]
+name = "personal_planner_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.0.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.0.0", features = [] }
+tauri-plugin-sql = { version = "2.0.0", features = ["sqlite"] }
+tauri-plugin-notification = "2.0.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
