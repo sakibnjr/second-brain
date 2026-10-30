@@ -1,6 +1,6 @@
 [package]
 name = "personal-planner-desktop"
-version = "0.1.0"
+version = "1.0.0"
 description = "Second Brain — Never lose a thought."
 authors = ["Sakib"]
 edition = "2021"
