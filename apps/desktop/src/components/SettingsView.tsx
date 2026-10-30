@@ -167,58 +167,50 @@ export function SettingsView() {
     reader.readAsText(file);
   };
 
+  const card = "bg-surface rounded-2xl border border-border shadow-sm p-5";
+  const syncing = syncState === "syncing";
+
   return (
-    <div className="space-y-6 w-full max-w-none">
-      <div>
-        <h2 className="text-xl font-bold tracking-tight text-textPrimary">
-          Settings & Account
-        </h2>
-        <p className="text-xs text-textSecondary mt-0.5">
-          Manage your cloud sync account, theme preferences, and data backups.
-        </p>
-      </div>
-
-      {/* Supabase Account Card */}
-      <div className="p-6 rounded-2xl border border-border bg-surface shadow-sm space-y-4">
-        <div className="flex items-center justify-between pb-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
-              <User className="w-5 h-5" />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-none content-start items-start">
+      {/* ───────── Left column ───────── */}
+      <div className="space-y-6 min-w-0">
+        {/* Account */}
+        <section className={card}>
+          <div className="flex items-center justify-between pb-4 border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <User className="w-5 h-5 fill-primary/20" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-textPrimary">Account</h3>
+                <p className="text-[11px] text-textMuted">
+                  {userEmail ? "Signed in" : "Local guest mode"}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-textPrimary">
-                Supabase Cloud Sync Account
-              </h3>
-              <p className="text-xs text-textSecondary font-mono">
-                Project Ref: ipfczdqmbjaiwfrdxupl
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-lg font-medium">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>RLS Protected</span>
+            <span className="flex items-center gap-1.5 text-[11px] text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-lg font-semibold">
+              <ShieldCheck className="w-3.5 h-3.5 fill-emerald-500/30" />
+              <span>Protected</span>
             </span>
           </div>
-        </div>
 
-        {userEmail ? (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-background border border-border">
-            <div>
-              <span className="text-xs text-textMuted">Signed in as:</span>
-              <p className="text-sm font-semibold text-textPrimary">{userEmail}</p>
-            </div>
-            <button
-              onClick={handleSignOut}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-600 hover:bg-rose-500/10 text-xs font-semibold transition"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4 max-w-md pt-2">
+          <div className="pt-4">
+            {userEmail ? (
+              <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-background border border-border">
+                <div className="min-w-0">
+                  <span className="text-[11px] text-textMuted">Signed in as</span>
+                  <p className="text-sm font-semibold text-textPrimary truncate">{userEmail}</p>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-600 hover:bg-rose-500/10 text-xs font-semibold transition shrink-0"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign out</span>
+                </button>
+              </div>
+            ) : (
+          <div className="space-y-4">
             {/* Google OAuth Button */}
             <button
               type="button"
@@ -336,111 +328,114 @@ export function SettingsView() {
             </button>
           </form>
         </div>
-        )}
-      </div>
-
-      {/* Sync Status Card */}
-      <div className="p-6 rounded-2xl border border-border bg-surface shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-bold text-textPrimary">Sync Controls</h3>
+            )}
           </div>
+        </section>
 
-          <button
-            onClick={() => syncEngine.sync()}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg shadow-sm transition"
-          >
-            <RefreshCw
-              className={`w-3.5 h-3.5 ${
-                syncState === "syncing" ? "animate-spin" : ""
-              }`}
-            />
-            <span>Sync Now</span>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 text-xs font-mono">
-          <div className="p-3 rounded-xl bg-background border border-border">
-            <span className="text-textMuted block text-[11px]">Sync Status:</span>
-            <span className="font-semibold text-textPrimary capitalize">
-              {syncMessage || syncState}
-            </span>
-          </div>
-          <div className="p-3 rounded-xl bg-background border border-border">
-            <span className="text-textMuted block text-[11px]">Last Synced:</span>
-            <span className="font-semibold text-textPrimary">
-              {lastSync ? new Date(lastSync).toLocaleTimeString() : "Never"}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Theme & Preferences */}
-      <div className="p-6 rounded-2xl border border-border bg-surface shadow-sm space-y-4">
-        <h3 className="text-sm font-bold text-textPrimary">Appearance</h3>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-textPrimary">Theme</p>
-            <p className="text-xs text-textSecondary">
-              Switch between light and dark visual themes.
-            </p>
+        {/* Appearance */}
+        <section className={`${card} flex items-center justify-between gap-4`}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-600 flex items-center justify-center">
+              {isDark ? <Moon className="w-5 h-5 fill-violet-500/30" /> : <Sun className="w-5 h-5 fill-violet-500/30" />}
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-textPrimary">Appearance</h3>
+              <p className="text-[11px] text-textMuted">Switch between light and dark theme</p>
+            </div>
           </div>
           <button
             onClick={toggleTheme}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-background text-xs font-semibold text-textPrimary hover:bg-surfaceHover transition"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-border bg-background text-xs font-semibold text-textPrimary hover:bg-surfaceHover transition shrink-0"
           >
             {isDark ? (
               <>
                 <Sun className="w-3.5 h-3.5 text-amber-500" />
-                <span>Light Mode</span>
+                <span>Light mode</span>
               </>
             ) : (
               <>
                 <Moon className="w-3.5 h-3.5 text-blue-500" />
-                <span>Dark Mode</span>
+                <span>Dark mode</span>
               </>
             )}
           </button>
-        </div>
+        </section>
       </div>
 
-      {/* Data Backup & Export */}
-      <div className="p-6 rounded-2xl border border-border bg-surface shadow-sm space-y-4">
-        <h3 className="text-sm font-bold text-textPrimary">Data Backup</h3>
-        <p className="text-xs text-textSecondary">
-          Export an offline JSON backup of all your tasks, ideas, and learning records.
-        </p>
+      {/* ───────── Right column ───────── */}
+      <div className="space-y-6 min-w-0">
+        {/* Sync */}
+        <section className={card}>
+          <div className="flex items-center justify-between gap-4 pb-4 border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
+                <RefreshCw className={`w-5 h-5 ${syncing ? "animate-spin" : ""}`} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-textPrimary">Sync</h3>
+                <p className="text-[11px] text-textMuted">Keep your devices up to date</p>
+              </div>
+            </div>
+            <button
+              onClick={() => syncEngine.sync()}
+              disabled={syncing}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-primary hover:bg-primary-hover disabled:opacity-60 text-white text-xs font-semibold rounded-xl shadow-sm transition shrink-0"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
+              <span>{syncing ? "Syncing…" : "Sync now"}</span>
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-3 pt-4">
+            <div className="p-3.5 rounded-xl bg-background border border-border min-w-0">
+              <span className="text-[11px] text-textMuted block">Status</span>
+              <span className="text-xs font-semibold text-textPrimary capitalize block truncate mt-0.5">
+                {syncMessage || syncState}
+              </span>
+            </div>
+            <div className="p-3.5 rounded-xl bg-background border border-border">
+              <span className="text-[11px] text-textMuted block">Last synced</span>
+              <span className="text-xs font-semibold text-textPrimary block mt-0.5">
+                {lastSync ? new Date(lastSync).toLocaleTimeString() : "Never"}
+              </span>
+            </div>
+          </div>
+        </section>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleExport}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surfaceHover hover:bg-border text-xs font-semibold text-textPrimary transition"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export JSON Backup</span>
-          </button>
+        {/* Backup */}
+        <section className={card}>
+          <div className="flex items-center gap-3 pb-4 border-b border-border">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+              <Download className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-textPrimary">Data backup</h3>
+              <p className="text-[11px] text-textMuted">Export or restore tasks, ideas and learning records</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3 pt-4">
+            <button
+              onClick={handleExport}
+              className="flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-surfaceHover hover:bg-border text-xs font-semibold text-textPrimary transition"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export JSON</span>
+            </button>
+            <label className="flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-border hover:bg-surfaceHover text-xs font-semibold text-textPrimary cursor-pointer transition">
+              <Upload className="w-3.5 h-3.5" />
+              <span>Restore backup</span>
+              <input type="file" accept=".json" onChange={handleImport} className="hidden" />
+            </label>
+          </div>
+        </section>
 
-          <label className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border hover:bg-surfaceHover text-xs font-semibold text-textPrimary cursor-pointer transition">
-            <Upload className="w-3.5 h-3.5" />
-            <span>Restore Backup</span>
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              className="hidden"
-            />
-          </label>
-        </div>
-      </div>
-
-      {/* About Second Brain */}
-      <div className="p-6 rounded-2xl border border-border bg-surface shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <BrandWordmark size="md" />
-        <div className="sm:text-right font-mono text-[11px] text-textMuted">
-          <p>Second Brain v1.0.0 (Local-First)</p>
-          <p className="text-[10px] text-emerald-600 mt-0.5">● Linux & Android Sync Active</p>
-        </div>
+        {/* About */}
+        <section className="rounded-2xl border border-[#1E293B] bg-[#0A0D14] p-5 flex items-center justify-between gap-4">
+          <BrandWordmark size="md" />
+          <div className="text-right text-[11px] font-mono text-[#64748B]">
+            <p>v1.0.0</p>
+            <p className="text-emerald-400 mt-0.5">● Local-first</p>
+          </div>
+        </section>
       </div>
     </div>
   );
