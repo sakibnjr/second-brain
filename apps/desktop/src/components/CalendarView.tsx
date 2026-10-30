@@ -150,7 +150,7 @@ export function CalendarView() {
         </div>
 
         {/* Selected Date Tasks */}
-        <div className="md:col-span-2 p-6 rounded-2xl border border-border bg-surface shadow-sm space-y-4">
+        <div className="md:col-span-2 p-6 rounded-2xl border border-border bg-surface shadow-sm flex flex-col gap-4">
           <div className="flex items-center justify-between pb-3 border-b border-border">
             <div className="flex items-center gap-2">
               <CalendarIcon className="w-4 h-4 text-primary" />
@@ -161,7 +161,7 @@ export function CalendarView() {
           </div>
 
           {tasksOnSelectedDate.length === 0 ? (
-            <div className="py-12 text-center border border-dashed border-border rounded-2xl flex flex-col items-center justify-center">
+            <div className="flex-1 min-h-[260px] text-center border border-dashed border-border rounded-2xl flex flex-col items-center justify-center">
               <CalendarEmptyIllustration />
               <p className="text-xs font-semibold text-textPrimary">
                 No tasks scheduled for {selectedDate}

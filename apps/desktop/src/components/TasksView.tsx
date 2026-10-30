@@ -160,7 +160,7 @@ export function TasksView() {
     ];
 
   return (
-    <div className="space-y-6 w-full max-w-none">
+    <div className="flex flex-col flex-1 gap-6 w-full max-w-none min-h-0">
       {/* Top Header & Controls */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-surface p-4 rounded-2xl border border-border shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
@@ -399,9 +399,9 @@ export function TasksView() {
 
       {/* VIEW 2: FULL-WIDTH LIST VIEW */}
       {viewMode === "list" && (
-        <div className="space-y-2.5 w-full">
+        <div className={filteredTasks.length === 0 ? "flex flex-1 w-full" : "space-y-2.5 w-full"}>
           {filteredTasks.length === 0 ? (
-            <div className="py-16 text-center rounded-2xl border border-dashed border-border bg-surface/30 flex flex-col items-center justify-center">
+            <div className="flex-1 min-h-[320px] p-10 text-center rounded-2xl border border-dashed border-border bg-surface/30 flex flex-col items-center justify-center">
               <TaskEmptyIllustration />
               <p className="text-sm font-semibold text-textPrimary">
                 No tasks found in {activeTab}

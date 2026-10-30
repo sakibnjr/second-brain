@@ -87,7 +87,7 @@ export function IdeasView() {
   });
 
   return (
-    <div className="space-y-6 w-full max-w-none">
+    <div className="flex flex-col flex-1 gap-6 w-full max-w-none min-h-0">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -195,9 +195,9 @@ export function IdeasView() {
       </div>
 
       {/* Ideas Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className={filteredIdeas.length === 0 ? "flex flex-1" : "grid grid-cols-1 md:grid-cols-2 gap-4"}>
         {filteredIdeas.length === 0 ? (
-          <div className="col-span-full py-16 text-center border border-dashed border-border rounded-2xl bg-surface/30 flex flex-col items-center justify-center">
+          <div className="flex-1 min-h-[320px] p-10 text-center border border-dashed border-border rounded-2xl bg-surface/30 flex flex-col items-center justify-center">
             <IdeaEmptyIllustration />
             <p className="text-sm font-semibold text-textPrimary">
               No ideas in {tab}

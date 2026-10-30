@@ -122,7 +122,7 @@ export function LearningView() {
   };
 
   return (
-    <div className="space-y-6 w-full max-w-none">
+    <div className="flex flex-col flex-1 gap-6 w-full max-w-none min-h-0">
       {/* Top Controls */}
       <div className="flex items-center justify-between">
         <div>
@@ -143,6 +143,21 @@ export function LearningView() {
         </button>
       </div>
 
+      {resources.length === 0 ? (
+        <div className="flex-1 min-h-[420px] rounded-2xl border border-dashed border-border bg-surface/30 flex flex-col items-center justify-center text-center p-10">
+          <LearningEmptyIllustration />
+          <p className="text-sm font-semibold text-textPrimary">No resources yet</p>
+          <p className="text-xs text-textMuted mt-1 max-w-xs">
+            Add a course, book or tutorial to track progress and log study sessions.
+          </p>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="mt-4 px-3.5 py-2 rounded-lg bg-teal-500/10 text-teal-600 hover:bg-teal-500/20 text-xs font-semibold transition"
+          >
+            + Add your first course
+          </button>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Resources List */}
         <div className="space-y-3">
@@ -325,6 +340,7 @@ export function LearningView() {
           )}
         </div>
       </div>
+      )}
 
       {/* Add Resource Modal */}
       {isAddModalOpen && (
