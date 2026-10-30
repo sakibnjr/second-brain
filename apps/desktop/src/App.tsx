@@ -48,10 +48,10 @@ function UserAvatar({
 
   const sizeClass =
     size === "lg"
-      ? "w-12 h-12 text-base"
+      ? "w-14 h-14 text-lg"
       : size === "sm"
       ? "w-8 h-8 text-xs"
-      : "w-10 h-10 text-sm";
+      : "w-12 h-12 text-sm";
 
   if (avatarUrl && !hasError) {
     return (
@@ -60,14 +60,14 @@ function UserAvatar({
         alt={name}
         referrerPolicy="no-referrer"
         onError={() => setHasError(true)}
-        className={`${sizeClass} rounded-full object-cover ring-2 ring-primary/20 shadow-xs shrink-0`}
+        className={`${sizeClass} rounded-2xl object-cover ring-2 ring-primary/20 shadow-sm shrink-0`}
       />
     );
   }
 
   return (
     <div
-      className={`${sizeClass} rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-xs shrink-0 select-none`}
+      className={`${sizeClass} rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-sm shadow-blue-500/20 shrink-0 select-none`}
     >
       {isLoggedIn && name ? (
         name.charAt(0).toUpperCase()
@@ -190,16 +190,16 @@ export default function App() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background">
       {/* Sleek Dark Obsidian Sidebar */}
-      <aside className="w-64 bg-[#0A0D14] text-[#E2E8F0] border-r border-[#1E293B] flex flex-col justify-between p-4 select-none shrink-0 shadow-xl z-20">
+      <aside className="w-64 bg-[#0A0D14] text-[#E2E8F0] border-r border-[#1E293B] flex flex-col justify-between select-none shrink-0 shadow-xl z-20">
         <div>
-          {/* Brand Header */}
-          <div className="flex items-center justify-between pb-6 px-2 pt-1 border-b border-[#1E293B]/80 mb-4">
+          {/* Brand Header - exactly h-20 to match Main Header */}
+          <div className="h-20 flex items-center justify-between px-5 border-b border-[#1E293B]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-                <Layers className="w-4 h-4" />
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/25">
+                <Layers className="w-4.5 h-4.5" />
               </div>
               <div>
-                <h1 className="text-base font-bold tracking-tight text-white leading-none">
+                <h1 className="text-sm font-bold tracking-tight text-white leading-none">
                   Planner
                 </h1>
                 <p className="text-[10px] text-[#94A3B8] font-mono mt-1">
@@ -223,7 +223,7 @@ export default function App() {
           </div>
 
           {/* Navigation Links */}
-          <nav className="space-y-1.5">
+          <nav className="p-4 space-y-1.5">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -250,7 +250,7 @@ export default function App() {
         </div>
 
         {/* Sidebar Footer with Quick Task Button */}
-        <div className="pt-4 border-t border-[#1E293B] px-1 space-y-3">
+        <div className="p-4 pb-5 border-t border-[#1E293B] space-y-3">
           <button
             onClick={() => setIsQuickAddModalOpen(true)}
             className="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/25 transition active:scale-[0.98]"
@@ -267,10 +267,10 @@ export default function App() {
       {/* Main Full-Width Content Area */}
       <main className="flex-1 flex flex-col overflow-y-auto w-full min-w-0">
         {/* Sticky Top Header Bar with Welcome & User Photo */}
-        <header className="h-18 border-b border-border bg-surface/90 backdrop-blur sticky top-0 z-10 px-8 flex items-center justify-between shrink-0 shadow-2xs">
+        <header className="h-20 border-b border-border bg-surface sticky top-0 z-10 px-8 flex items-center justify-between shrink-0 shadow-xs">
           {activeTab === "dashboard" ? (
             /* Dashboard: Replace 'Dashboard' with User Photo + Name + Date */
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-4">
               <UserAvatar
                 avatarUrl={userProfile.avatarUrl}
                 name={userProfile.name}
@@ -278,25 +278,28 @@ export default function App() {
                 size="md"
               />
               <div>
-                <h2 className="text-sm md:text-base font-bold text-textPrimary leading-tight">
+                <h2 className="text-base lg:text-lg font-bold text-textPrimary leading-tight tracking-tight">
                   {userProfile.isLoggedIn
                     ? `Welcome back, ${userProfile.name}!`
                     : "Hello, Guest 👋"}
                 </h2>
-                <p className="text-[11px] text-textMuted font-medium mt-0.5">
-                  {new Date().toLocaleDateString(undefined, {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                <p className="text-xs text-textSecondary font-medium mt-1 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-textMuted" />
+                  <span>
+                    {new Date().toLocaleDateString(undefined, {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </span>
                 </p>
               </div>
             </div>
           ) : (
             /* Other Tabs: Show Title */
             <div className="flex items-center gap-3">
-              <h2 className="text-base font-bold capitalize text-textPrimary">
+              <h2 className="text-lg font-bold capitalize text-textPrimary">
                 {activeTab === "ideas"
                   ? "Idea Inbox"
                   : activeTab === "learning"
@@ -313,7 +316,7 @@ export default function App() {
             {!userProfile.isLoggedIn && (
               <button
                 onClick={() => setActiveTab("settings")}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:bg-surfaceHover text-xs font-semibold text-textSecondary transition"
+                className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border hover:bg-surfaceHover text-xs font-semibold text-textSecondary transition"
               >
                 <User className="w-3.5 h-3.5" />
                 <span>Sign In</span>
@@ -322,16 +325,16 @@ export default function App() {
 
             <button
               onClick={() => setIsQuickAddModalOpen(true)}
-              className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg shadow-sm transition active:scale-95"
+              className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition active:scale-95"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4" />
               <span>Add Task</span>
             </button>
           </div>
         </header>
 
         {/* Content Container - 100% Width */}
-        <section className="p-6 lg:p-8 flex-1 w-full max-w-none">
+        <section className="p-6 lg:p-8 flex-1 flex flex-col w-full max-w-none min-h-0">
           {activeTab === "dashboard" && (
             <DashboardView
               onNavigate={(tab) => setActiveTab(tab)}

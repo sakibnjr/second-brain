@@ -97,108 +97,136 @@ export function DashboardView({
   const recentIdeas = ideas.slice(0, 3);
 
   return (
-    <div className="space-y-6 w-full max-w-none">
-      {/* 1. Stat Cards at the VERY TOP with Soothing Pastel Colors */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+    <div className="flex flex-col flex-1 w-full max-w-none space-y-6 min-h-0">
+      {/* 1. Stat Cards with Balanced Structure & Helpful Context */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4.5 w-full shrink-0">
         {/* Card 1: Today's Tasks */}
         <div
           onClick={() => onNavigate("tasks")}
-          className="cursor-pointer p-5 rounded-2xl border border-blue-200/80 bg-blue-50/90 dark:bg-blue-950/25 dark:border-blue-900/60 hover:shadow-md transition-all group shadow-xs"
+          className="cursor-pointer p-5 rounded-2xl border border-blue-200/80 bg-blue-50/90 dark:bg-blue-950/25 dark:border-blue-900/60 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group shadow-xs flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-blue-900 dark:text-blue-300">
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-900/80 dark:text-blue-300">
               Today's Tasks
             </span>
-            <CheckSquare className="w-5 h-5 text-blue-600 dark:text-blue-400 fill-blue-600/30 group-hover:scale-110 transition" />
+            <div className="w-8 h-8 rounded-xl bg-blue-500/15 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-105 transition">
+              <CheckSquare className="w-4 h-4 fill-blue-600/30" />
+            </div>
           </div>
-          <div className="text-3xl font-black text-blue-950 dark:text-blue-100 mt-3 font-mono">
+          <div className="text-3xl font-black text-blue-950 dark:text-blue-100 font-mono tracking-tight my-2">
             {todayTasks.length}
+          </div>
+          <div className="text-[11px] font-medium text-blue-700/80 dark:text-blue-300/80">
+            {todayTasks.length === 0 ? "All caught up today" : `${todayTasks.length} scheduled for today`}
           </div>
         </div>
 
         {/* Card 2: Overdue */}
         <div
           onClick={() => onNavigate("tasks")}
-          className="cursor-pointer p-5 rounded-2xl border border-rose-200/80 bg-rose-50/90 dark:bg-rose-950/25 dark:border-rose-900/60 hover:shadow-md transition-all group shadow-xs"
+          className="cursor-pointer p-5 rounded-2xl border border-rose-200/80 bg-rose-50/90 dark:bg-rose-950/25 dark:border-rose-900/60 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group shadow-xs flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-rose-900 dark:text-rose-300">
+            <span className="text-xs font-bold uppercase tracking-wider text-rose-900/80 dark:text-rose-300">
               Overdue
             </span>
-            <Clock className="w-5 h-5 text-rose-600 dark:text-rose-400 fill-rose-600/30 group-hover:scale-110 transition" />
+            <div className="w-8 h-8 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-600 dark:text-rose-400 group-hover:scale-105 transition">
+              <Clock className="w-4 h-4 fill-rose-600/30" />
+            </div>
           </div>
-          <div className="text-3xl font-black text-rose-950 dark:text-rose-100 mt-3 font-mono">
+          <div className="text-3xl font-black text-rose-950 dark:text-rose-100 font-mono tracking-tight my-2">
             {overdueTasks.length}
+          </div>
+          <div className="text-[11px] font-medium text-rose-700/80 dark:text-rose-300/80">
+            {overdueTasks.length === 0 ? "No overdue tasks" : "Requires attention"}
           </div>
         </div>
 
         {/* Card 3: Active Courses */}
         <div
           onClick={() => onNavigate("learning")}
-          className="cursor-pointer p-5 rounded-2xl border border-emerald-200/80 bg-emerald-50/90 dark:bg-emerald-950/25 dark:border-emerald-900/60 hover:shadow-md transition-all group shadow-xs"
+          className="cursor-pointer p-5 rounded-2xl border border-emerald-200/80 bg-emerald-50/90 dark:bg-emerald-950/25 dark:border-emerald-900/60 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group shadow-xs flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-900/80 dark:text-emerald-300">
               Active Courses
             </span>
-            <GraduationCap className="w-5 h-5 text-emerald-600 dark:text-emerald-400 fill-emerald-600/30 group-hover:scale-110 transition" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition">
+              <GraduationCap className="w-4 h-4 fill-emerald-600/30" />
+            </div>
           </div>
-          <div className="text-3xl font-black text-emerald-950 dark:text-emerald-100 mt-3 font-mono">
+          <div className="text-3xl font-black text-emerald-950 dark:text-emerald-100 font-mono tracking-tight my-2">
             {inProgressLearning.length}
+          </div>
+          <div className="text-[11px] font-medium text-emerald-700/80 dark:text-emerald-300/80">
+            {inProgressLearning.length === 0 ? "Start a new track" : `${inProgressLearning.length} learning tracks in progress`}
           </div>
         </div>
 
         {/* Card 4: Ideas Captured */}
         <div
           onClick={() => onNavigate("ideas")}
-          className="cursor-pointer p-5 rounded-2xl border border-amber-200/80 bg-amber-50/90 dark:bg-amber-950/25 dark:border-amber-900/60 hover:shadow-md transition-all group shadow-xs"
+          className="cursor-pointer p-5 rounded-2xl border border-amber-200/80 bg-amber-50/90 dark:bg-amber-950/25 dark:border-amber-900/60 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group shadow-xs flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-900 dark:text-amber-300">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-900/80 dark:text-amber-300">
               Ideas Captured
             </span>
-            <Lightbulb className="w-5 h-5 text-amber-600 dark:text-amber-400 fill-amber-600/40 group-hover:scale-110 transition" />
+            <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-600 dark:text-amber-400 group-hover:scale-105 transition">
+              <Lightbulb className="w-4 h-4 fill-amber-600/40" />
+            </div>
           </div>
-          <div className="text-3xl font-black text-amber-950 dark:text-amber-100 mt-3 font-mono">
+          <div className="text-3xl font-black text-amber-950 dark:text-amber-100 font-mono tracking-tight my-2">
             {ideas.length}
+          </div>
+          <div className="text-[11px] font-medium text-amber-700/80 dark:text-amber-300/80">
+            {ideas.length === 0 ? "Inbox is empty" : `${ideas.length} notes & sparks saved`}
           </div>
         </div>
       </div>
 
-      {/* Quick Add Bar */}
+      {/* 2. Sleek Quick Add Task Bar */}
       <form
         onSubmit={handleQuickAdd}
-        className="flex items-center gap-2 p-2 bg-surface rounded-2xl border border-border shadow-sm focus-within:ring-2 focus-within:ring-primary transition"
+        className="flex items-center gap-3 px-4 py-2.5 bg-surface rounded-2xl border border-border shadow-xs hover:border-slate-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shrink-0"
       >
+        <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <Plus className="w-4 h-4" />
+        </div>
         <input
           type="text"
           value={quickTitle}
           onChange={(e) => setQuickTitle(e.target.value)}
-          placeholder="Quick add a task for today (Press Enter)..."
-          className="flex-1 bg-transparent px-3 py-1.5 text-sm text-textPrimary placeholder:text-textMuted focus:outline-none"
+          placeholder="What would you like to accomplish today? (Type & press Enter to save)"
+          className="flex-1 bg-transparent text-sm text-textPrimary placeholder:text-textMuted focus:outline-none"
         />
-        <button
-          type="submit"
-          className="flex items-center gap-1 bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-3 py-2 rounded-xl transition"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Add</span>
-        </button>
-        <button
-          type="button"
-          onClick={onOpenTaskModal}
-          className="px-3 py-2 text-xs font-medium text-textSecondary hover:bg-surfaceHover rounded-xl transition"
-        >
-          Full Details
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <kbd className="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-medium text-textMuted bg-background rounded-md border border-border">
+            Enter ↵
+          </kbd>
+          <button
+            type="submit"
+            className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-xs transition active:scale-95"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Task</span>
+          </button>
+          <button
+            type="button"
+            onClick={onOpenTaskModal}
+            className="px-3 py-2 text-xs font-medium text-textSecondary hover:bg-surfaceHover rounded-xl transition"
+          >
+            Detailed Plan
+          </button>
+        </div>
       </form>
 
       {/* 3. Redesigned Premium 3-Column Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full flex-1 min-h-[460px]">
         {/* Column 1: Today's Tasks */}
-        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[420px] transition hover:shadow-md">
-          {/* Premium Header */}
-          <div className="flex items-center justify-between pb-3.5 border-b border-border/80 mb-4">
+        <div className="bg-surface rounded-2xl border border-border p-6 shadow-xs flex flex-col transition hover:shadow-md h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between pb-4 border-b border-border/80 mb-4 shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 flex items-center justify-center shadow-xs">
                 <CheckSquare className="w-5 h-5 fill-blue-500/30" />
@@ -209,7 +237,7 @@ export function DashboardView({
                     Today's Focus
                   </h3>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono">
-                    {todayTasks.length}
+                    {todayTasks.length} tasks
                   </span>
                 </div>
                 <p className="text-[11px] text-textMuted">Priority tasks scheduled</p>
@@ -224,19 +252,19 @@ export function DashboardView({
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-2">
+          <div className="flex-1 flex flex-col overflow-y-auto space-y-2 min-h-0">
             {todayTasks.length === 0 && overdueTasks.length === 0 ? (
-              <div className="py-10 text-center flex flex-col items-center justify-center h-full">
+              <div className="flex-1 flex flex-col items-center justify-center py-6 text-center">
                 <TaskEmptyIllustration />
-                <p className="text-xs font-semibold text-textPrimary">
+                <h4 className="text-xs font-semibold text-textPrimary mt-3">
                   All caught up for today!
-                </p>
-                <p className="text-[11px] text-textMuted mt-1 max-w-[200px]">
+                </h4>
+                <p className="text-[11px] text-textMuted mt-1 max-w-[220px]">
                   No pending tasks due today. Plan your day by scheduling a new task.
                 </p>
                 <button
                   onClick={onOpenTaskModal}
-                  className="mt-3.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition"
+                  className="mt-4 px-3.5 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition active:scale-95"
                 >
                   + Add New Task
                 </button>
@@ -247,7 +275,7 @@ export function DashboardView({
                 {overdueTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 group hover:border-rose-500/40 transition"
+                    className="flex items-center justify-between p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 group hover:border-rose-500/40 transition shrink-0"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <input
@@ -275,7 +303,7 @@ export function DashboardView({
                 {todayTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-background border border-border group hover:border-primary/50 transition"
+                    className="flex items-center justify-between p-3 rounded-xl bg-background border border-border group hover:border-primary/50 transition shrink-0"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <input
@@ -307,9 +335,9 @@ export function DashboardView({
         </div>
 
         {/* Column 2: Learning Focus */}
-        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[420px] transition hover:shadow-md">
-          {/* Premium Header */}
-          <div className="flex items-center justify-between pb-3.5 border-b border-border/80 mb-4">
+        <div className="bg-surface rounded-2xl border border-border p-6 shadow-xs flex flex-col transition hover:shadow-md h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between pb-4 border-b border-border/80 mb-4 shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 flex items-center justify-center shadow-xs">
                 <GraduationCap className="w-5 h-5 fill-teal-500/30" />
@@ -320,7 +348,7 @@ export function DashboardView({
                     Learning Focus
                   </h3>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 font-mono">
-                    {inProgressLearning.length} Active
+                    {inProgressLearning.length} active
                   </span>
                 </div>
                 <p className="text-[11px] text-textMuted">Courses & study goals</p>
@@ -335,19 +363,19 @@ export function DashboardView({
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-3">
+          <div className="flex-1 flex flex-col overflow-y-auto space-y-3 min-h-0">
             {inProgressLearning.length === 0 ? (
-              <div className="py-10 text-center flex flex-col items-center justify-center h-full">
+              <div className="flex-1 flex flex-col items-center justify-center py-6 text-center">
                 <LearningEmptyIllustration />
-                <p className="text-xs font-semibold text-textPrimary">
+                <h4 className="text-xs font-semibold text-textPrimary mt-3">
                   No courses active
-                </p>
-                <p className="text-[11px] text-textMuted mt-1 max-w-[200px]">
+                </h4>
+                <p className="text-[11px] text-textMuted mt-1 max-w-[220px]">
                   Track tutorials, books, and courses you are studying.
                 </p>
                 <button
                   onClick={() => onNavigate("learning")}
-                  className="mt-3.5 px-3 py-1.5 rounded-xl bg-teal-500/10 text-teal-600 hover:bg-teal-500/20 text-xs font-semibold transition"
+                  className="mt-4 px-3.5 py-1.5 rounded-xl bg-teal-500/10 text-teal-600 hover:bg-teal-500/20 text-xs font-semibold transition active:scale-95"
                 >
                   + Add Learning Resource
                 </button>
@@ -356,7 +384,7 @@ export function DashboardView({
               inProgressLearning.map((res) => (
                 <div
                   key={res.id}
-                  className="p-3 rounded-xl border border-border bg-background space-y-2 hover:border-teal-500/40 transition"
+                  className="p-3.5 rounded-xl border border-border bg-background space-y-2.5 hover:border-teal-500/40 transition shrink-0"
                 >
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-bold text-textPrimary truncate max-w-[200px]">
@@ -390,9 +418,9 @@ export function DashboardView({
         </div>
 
         {/* Column 3: Recent Ideas */}
-        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[420px] transition hover:shadow-md">
-          {/* Premium Header */}
-          <div className="flex items-center justify-between pb-3.5 border-b border-border/80 mb-4">
+        <div className="bg-surface rounded-2xl border border-border p-6 shadow-xs flex flex-col transition hover:shadow-md h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between pb-4 border-b border-border/80 mb-4 shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center shadow-xs">
                 <Lightbulb className="w-5 h-5 fill-amber-500/30" />
@@ -403,7 +431,7 @@ export function DashboardView({
                     Idea Vault
                   </h3>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono">
-                    {ideas.length} Saved
+                    {ideas.length} ideas
                   </span>
                 </div>
                 <p className="text-[11px] text-textMuted">Sparks & quick notes</p>
@@ -418,19 +446,19 @@ export function DashboardView({
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-2.5">
+          <div className="flex-1 flex flex-col overflow-y-auto space-y-2.5 min-h-0">
             {recentIdeas.length === 0 ? (
-              <div className="py-10 text-center flex flex-col items-center justify-center h-full">
+              <div className="flex-1 flex flex-col items-center justify-center py-6 text-center">
                 <IdeaEmptyIllustration />
-                <p className="text-xs font-semibold text-textPrimary">
+                <h4 className="text-xs font-semibold text-textPrimary mt-3">
                   No ideas captured yet
-                </p>
-                <p className="text-[11px] text-textMuted mt-1 max-w-[200px]">
+                </h4>
+                <p className="text-[11px] text-textMuted mt-1 max-w-[220px]">
                   Got a spark of inspiration? Capture your quick thoughts anytime.
                 </p>
                 <button
                   onClick={() => onNavigate("ideas")}
-                  className="mt-3.5 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 text-xs font-semibold transition"
+                  className="mt-4 px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 text-xs font-semibold transition active:scale-95"
                 >
                   + Capture Quick Idea
                 </button>
@@ -440,7 +468,7 @@ export function DashboardView({
                 <div
                   key={idea.id}
                   onClick={() => onNavigate("ideas")}
-                  className="p-3 rounded-xl border border-border bg-background hover:border-amber-500/50 transition cursor-pointer space-y-1"
+                  className="p-3.5 rounded-xl border border-border bg-background hover:border-amber-500/50 transition cursor-pointer space-y-1 shrink-0"
                 >
                   <p className="text-xs font-semibold text-textPrimary truncate">
                     {idea.title}
