@@ -241,53 +241,59 @@ export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProp
         </button>
       </form>
 
-      {/* Two Column Layout: Today's Tasks & Learning/Ideas */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Tasks Due Today & Overdue */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-textPrimary flex items-center gap-2">
-                <CheckSquare className="w-4 h-4 text-primary" />
-                <span>Today's Priority Tasks</span>
-              </h3>
-              <button
-                onClick={() => onNavigate("tasks")}
-                className="text-xs font-semibold text-primary hover:underline"
-              >
-                View all ({tasks.length})
-              </button>
-            </div>
+      {/* 3 Same-Size Columns Layout (Tasks, Learning, Ideas) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+        {/* Column 1: Today's Tasks */}
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[380px]">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
+            <h3 className="text-sm font-bold text-textPrimary flex items-center gap-2">
+              <CheckSquare className="w-4 h-4 text-primary" />
+              <span>Today's Tasks</span>
+            </h3>
+            <button
+              onClick={() => onNavigate("tasks")}
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              View all ({tasks.length})
+            </button>
+          </div>
 
+          <div className="flex-1 overflow-y-auto space-y-2">
             {todayTasks.length === 0 && overdueTasks.length === 0 ? (
-              <div className="py-8 text-center text-sm text-textMuted">
-                🎉 No pending tasks due today. Add one above or plan your day!
+              <div className="py-16 text-center text-xs text-textMuted flex flex-col items-center justify-center h-full">
+                <span>🎉 No pending tasks due today.</span>
+                <button
+                  onClick={onOpenTaskModal}
+                  className="mt-2 text-primary font-semibold hover:underline"
+                >
+                  + Create a task
+                </button>
               </div>
             ) : (
-              <div className="space-y-2">
+              <>
                 {/* Overdue alert */}
                 {overdueTasks.map((task) => (
                   <div
                     key={task.id}
                     className="flex items-center justify-between p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 group hover:border-rose-500/40 transition"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <input
                         type="checkbox"
                         checked={task.status === "completed"}
                         onChange={() => handleToggleTask(task)}
-                        className="w-4 h-4 rounded text-primary focus:ring-primary cursor-pointer"
+                        className="w-4 h-4 rounded text-primary focus:ring-primary cursor-pointer shrink-0"
                       />
-                      <div>
-                        <p className="text-sm font-medium text-rose-700 dark:text-rose-300">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-rose-700 dark:text-rose-300 truncate">
                           {task.title}
                         </p>
-                        <p className="text-xs text-rose-500 font-mono">
+                        <p className="text-[10px] text-rose-500 font-mono">
                           Overdue ({task.due_at?.split("T")[0]})
                         </p>
                       </div>
                     </div>
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-rose-500/20 text-rose-600">
+                    <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-600 shrink-0">
                       {task.priority}
                     </span>
                   </div>
@@ -299,19 +305,19 @@ export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProp
                     key={task.id}
                     className="flex items-center justify-between p-3 rounded-xl bg-background border border-border group hover:border-primary/50 transition"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <input
                         type="checkbox"
                         checked={task.status === "completed"}
                         onChange={() => handleToggleTask(task)}
-                        className="w-4 h-4 rounded text-primary focus:ring-primary cursor-pointer"
+                        className="w-4 h-4 rounded text-primary focus:ring-primary cursor-pointer shrink-0"
                       />
-                      <span className="text-sm font-medium text-textPrimary">
+                      <span className="text-xs font-medium text-textPrimary truncate">
                         {task.title}
                       </span>
                     </div>
                     <span
-                      className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded ${
+                      className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded shrink-0 ${
                         task.priority === "high"
                           ? "bg-rose-500/10 text-rose-600"
                           : task.priority === "medium"
@@ -323,107 +329,120 @@ export function DashboardView({ onNavigate, onOpenTaskModal }: DashboardViewProp
                     </span>
                   </div>
                 ))}
-              </div>
+              </>
             )}
           </div>
         </div>
 
-        {/* Right Column: Active Learning & Recent Ideas */}
-        <div className="space-y-6">
-          {/* Active Learning Courses */}
-          <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-textPrimary flex items-center gap-2">
-                <GraduationCap className="w-4 h-4 text-teal-600" />
-                <span>Learning Focus</span>
-              </h3>
-              <button
-                onClick={() => onNavigate("learning")}
-                className="text-xs font-semibold text-primary hover:underline"
-              >
-                Tracker
-              </button>
-            </div>
-
-            {inProgressLearning.length === 0 ? (
-              <p className="text-xs text-textMuted text-center py-4">
-                No active courses. Add resources in Learning tab.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {inProgressLearning.slice(0, 3).map((res) => (
-                  <div
-                    key={res.id}
-                    className="p-3 rounded-xl border border-border bg-background space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold text-textPrimary truncate max-w-[180px]">
-                        {res.title}
-                      </h4>
-                      {res.url && (
-                        <a
-                          href={res.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-textMuted hover:text-primary transition"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      )}
-                    </div>
-                    <div className="w-full bg-surfaceHover h-2 rounded-full overflow-hidden">
-                      <div
-                        className="bg-teal-600 h-full rounded-full transition-all"
-                        style={{ width: `${res.progress_percent}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-[11px] text-textSecondary font-mono">
-                      <span>{res.provider || "Self-paced"}</span>
-                      <span>{res.progress_percent}%</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* Column 2: Learning Focus */}
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[380px]">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
+            <h3 className="text-sm font-bold text-textPrimary flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-teal-600" />
+              <span>Learning Focus</span>
+            </h3>
+            <button
+              onClick={() => onNavigate("learning")}
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              Tracker ({learning.length})
+            </button>
           </div>
 
-          {/* Recent Ideas */}
-          <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-semibold text-textPrimary flex items-center gap-2">
-                <Lightbulb className="w-4 h-4 text-amber-500" />
-                <span>Recent Ideas</span>
-              </h3>
-              <button
-                onClick={() => onNavigate("ideas")}
-                className="text-xs font-semibold text-primary hover:underline"
-              >
-                Inbox
-              </button>
-            </div>
-
-            {recentIdeas.length === 0 ? (
-              <p className="text-xs text-textMuted text-center py-4">
-                No ideas captured yet.
-              </p>
+          <div className="flex-1 overflow-y-auto space-y-3">
+            {inProgressLearning.length === 0 ? (
+              <div className="py-16 text-center text-xs text-textMuted flex flex-col items-center justify-center h-full">
+                <span>No active courses.</span>
+                <button
+                  onClick={() => onNavigate("learning")}
+                  className="mt-2 text-primary font-semibold hover:underline"
+                >
+                  + Add course
+                </button>
+              </div>
             ) : (
-              <div className="space-y-2">
-                {recentIdeas.map((idea) => (
-                  <div
-                    key={idea.id}
-                    className="p-2.5 rounded-xl border border-border bg-background hover:border-amber-500/40 transition"
-                  >
-                    <p className="text-xs font-medium text-textPrimary truncate">
-                      {idea.title}
-                    </p>
-                    {idea.content && (
-                      <p className="text-[11px] text-textMuted truncate mt-0.5">
-                        {idea.content}
-                      </p>
+              inProgressLearning.map((res) => (
+                <div
+                  key={res.id}
+                  className="p-3 rounded-xl border border-border bg-background space-y-2 hover:border-teal-500/40 transition"
+                >
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-textPrimary truncate max-w-[200px]">
+                      {res.title}
+                    </h4>
+                    {res.url && (
+                      <a
+                        href={res.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-textMuted hover:text-primary transition"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
                     )}
                   </div>
-                ))}
+                  <div className="w-full bg-surfaceHover h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className="bg-teal-600 h-full rounded-full transition-all"
+                      style={{ width: `${res.progress_percent}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-textSecondary font-mono">
+                    <span>{res.provider || "Self-study"}</span>
+                    <span>{res.progress_percent}%</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Column 3: Recent Ideas */}
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex flex-col min-h-[380px]">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
+            <h3 className="text-sm font-bold text-textPrimary flex items-center gap-2">
+              <Lightbulb className="w-4 h-4 text-amber-500" />
+              <span>Recent Ideas</span>
+            </h3>
+            <button
+              onClick={() => onNavigate("ideas")}
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              Inbox ({ideas.length})
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-2.5">
+            {recentIdeas.length === 0 ? (
+              <div className="py-16 text-center text-xs text-textMuted flex flex-col items-center justify-center h-full">
+                <span>No ideas captured yet.</span>
+                <button
+                  onClick={() => onNavigate("ideas")}
+                  className="mt-2 text-primary font-semibold hover:underline"
+                >
+                  + Quick note
+                </button>
               </div>
+            ) : (
+              recentIdeas.map((idea) => (
+                <div
+                  key={idea.id}
+                  onClick={() => onNavigate("ideas")}
+                  className="p-3 rounded-xl border border-border bg-background hover:border-amber-500/50 transition cursor-pointer space-y-1"
+                >
+                  <p className="text-xs font-semibold text-textPrimary truncate">
+                    {idea.title}
+                  </p>
+                  {idea.content && (
+                    <p className="text-[11px] text-textMuted truncate">
+                      {idea.content}
+                    </p>
+                  )}
+                  <span className="text-[9px] font-mono text-textMuted block">
+                    {new Date(idea.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              ))
             )}
           </div>
         </div>
