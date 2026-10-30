@@ -14,6 +14,7 @@ data class TaskEntity(
     val priority: String = "medium", // low, medium, high
     val dueAt: String? = null,
     val reminderAt: String? = null,
+    val tags: List<String> = emptyList(),
     val createdAt: String,
     val updatedAt: String,
     val deletedAt: String? = null,
@@ -27,6 +28,7 @@ data class IdeaEntity(
     val title: String,
     val content: String = "",
     val archivedAt: String? = null,
+    val tags: List<String> = emptyList(),
     val createdAt: String,
     val updatedAt: String,
     val deletedAt: String? = null,
@@ -43,6 +45,33 @@ data class LearningResourceEntity(
     val status: String = "planned", // planned, in_progress, completed, paused
     val progressPercent: Int = 0,
     val notes: String? = null,
+    val createdAt: String,
+    val updatedAt: String,
+    val deletedAt: String? = null,
+    val version: Long = 1
+)
+
+@Entity(tableName = "study_sessions")
+data class StudySessionEntity(
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val userId: String? = null,
+    val resourceId: String,
+    val startedAt: String,
+    val durationMinutes: Int,
+    val notes: String? = null,
+    val createdAt: String,
+    val updatedAt: String,
+    val deletedAt: String? = null,
+    val version: Long = 1
+)
+
+@Entity(tableName = "reminders")
+data class ReminderEntity(
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val userId: String? = null,
+    val taskId: String,
+    val remindAt: String,
+    val status: String = "pending", // pending, fired, dismissed
     val createdAt: String,
     val updatedAt: String,
     val deletedAt: String? = null,

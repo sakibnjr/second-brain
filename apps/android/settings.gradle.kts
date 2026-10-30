@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PersonalPlanner"
+rootProject.name = "SecondBrain"
 include(":app")

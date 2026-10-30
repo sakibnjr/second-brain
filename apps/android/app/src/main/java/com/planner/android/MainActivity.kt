@@ -9,15 +9,34 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.planner.android.ui.theme.PersonalPlannerTheme
+import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.planner.android.data.database.AppDatabase
+import com.planner.android.data.repository.IdeaRepository
+import com.planner.android.data.repository.LearningRepository
+import com.planner.android.data.repository.TaskRepository
+import com.planner.android.ui.screens.*
+import com.planner.android.ui.theme.SecondBrainTheme
+import com.planner.android.ui.viewmodels.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Initialize local-first SQLite persistence
+        val database = AppDatabase.getDatabase(applicationContext)
+        val taskRepository = TaskRepository(database.taskDao(), database.mutationQueueDao())
+        val ideaRepository = IdeaRepository(database.ideaDao(), database.mutationQueueDao())
+        val learningRepository = LearningRepository(database.learningDao(), database.mutationQueueDao())
+
         setContent {
-            PersonalPlannerTheme {
-                MainScreen()
+            SecondBrainTheme {
+                MainScreen(
+                    database = database,
+                    taskRepository = taskRepository,
+                    ideaRepository = ideaRepository,
+                    learningRepository = learningRepository
+                )
             }
         }
     }
@@ -25,7 +44,12 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    database: AppDatabase,
+    taskRepository: TaskRepository,
+    ideaRepository: IdeaRepository,
+    learningRepository: LearningRepository
+) {
     var selectedItem by remember { mutableStateOf(0) }
     val items = listOf("Dashboard", "Tasks", "Ideas", "Learning", "Settings")
     val icons = listOf(
@@ -36,17 +60,51 @@ fun MainScreen() {
         Icons.Default.Settings
     )
 
+    // ViewModels with factories
+    val dashboardViewModel: DashboardViewModel = viewModel(
+        factory = DashboardViewModelFactory(
+            taskRepository,
+            ideaRepository,
+            learningRepository,
+            database.mutationQueueDao()
+        )
+    )
+    val taskViewModel: TaskViewModel = viewModel(
+        factory = TaskViewModelFactory(taskRepository)
+    )
+    val ideaViewModel: IdeaViewModel = viewModel(
+        factory = IdeaViewModelFactory(ideaRepository)
+    )
+    val learningViewModel: LearningViewModel = viewModel(
+        factory = LearningViewModelFactory(learningRepository)
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(items[selectedItem]) },
+                title = {
+                    Column {
+                        Text(
+                            text = items[selectedItem],
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Second Brain",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface
+            ) {
                 items.forEachIndexed { index, item ->
                     NavigationBarItem(
                         icon = { Icon(icons[index], contentDescription = item) },
@@ -64,29 +122,15 @@ fun MainScreen() {
                 .padding(innerPadding),
             color = MaterialTheme.colorScheme.background
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Second Brain",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Never lose a thought.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
-                    }
-                }
+            when (selectedItem) {
+                0 -> DashboardScreen(
+                    viewModel = dashboardViewModel,
+                    onNavigate = { selectedItem = it }
+                )
+                1 -> TasksScreen(viewModel = taskViewModel)
+                2 -> IdeasScreen(viewModel = ideaViewModel)
+                3 -> LearningScreen(viewModel = learningViewModel)
+                4 -> SettingsScreen()
             }
         }
     }
