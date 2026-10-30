@@ -9,6 +9,7 @@ import {
   Cloud,
   Plus,
   Layers,
+  User,
 } from "lucide-react";
 import { DashboardView } from "./components/DashboardView";
 import { TasksView } from "./components/TasksView";
@@ -28,10 +29,117 @@ type NavTab =
   | "calendar"
   | "settings";
 
+function UserAvatar({
+  avatarUrl,
+  name,
+  isLoggedIn,
+  size = "md",
+}: {
+  avatarUrl: string | null;
+  name: string;
+  isLoggedIn: boolean;
+  size?: "sm" | "md" | "lg";
+}) {
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+  }, [avatarUrl]);
+
+  const sizeClass =
+    size === "lg"
+      ? "w-12 h-12 text-base"
+      : size === "sm"
+      ? "w-8 h-8 text-xs"
+      : "w-10 h-10 text-sm";
+
+  if (avatarUrl && !hasError) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        referrerPolicy="no-referrer"
+        onError={() => setHasError(true)}
+        className={`${sizeClass} rounded-full object-cover ring-2 ring-primary/20 shadow-xs shrink-0`}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`${sizeClass} rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-xs shrink-0 select-none`}
+    >
+      {isLoggedIn && name ? (
+        name.charAt(0).toUpperCase()
+      ) : (
+        <User className={size === "sm" ? "w-4 h-4" : "w-5 h-5"} />
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>("dashboard");
   const [isQuickAddModalOpen, setIsQuickAddModalOpen] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("idle");
+
+  const [userProfile, setUserProfile] = useState<{
+    name: string;
+    avatarUrl: string | null;
+    email: string | null;
+    isLoggedIn: boolean;
+  }>({
+    name: "Guest",
+    avatarUrl: null,
+    email: null,
+    isLoggedIn: false,
+  });
+
+  const extractUserData = (user: any) => {
+    if (!user) {
+      return {
+        name: "Guest",
+        avatarUrl: null,
+        email: null,
+        isLoggedIn: false,
+      };
+    }
+    const meta = user.user_metadata || {};
+    const identities = user.identities || [];
+    const googleIdentity =
+      identities.find((i: any) => i.provider === "google")?.identity_data || {};
+    const firstIdentity = identities[0]?.identity_data || {};
+
+    const name =
+      meta.full_name ||
+      meta.name ||
+      meta.given_name ||
+      googleIdentity.full_name ||
+      googleIdentity.name ||
+      firstIdentity.full_name ||
+      firstIdentity.name ||
+      user.email?.split("@")[0] ||
+      "User";
+
+    const avatarUrl =
+      meta.avatar_url ||
+      meta.picture ||
+      meta.avatar ||
+      meta.image ||
+      meta.photoURL ||
+      googleIdentity.avatar_url ||
+      googleIdentity.picture ||
+      firstIdentity.avatar_url ||
+      firstIdentity.picture ||
+      null;
+
+    return {
+      name,
+      avatarUrl,
+      email: user.email || null,
+      isLoggedIn: true,
+    };
+  };
 
   useEffect(() => {
     syncEngine.sync();
@@ -39,10 +147,27 @@ export default function App() {
       setSyncState(state);
     });
 
+    // Initial user load
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        setUserProfile(extractUserData(data.user));
+      }
+    });
+
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          syncEngine.sync();
+        if (session?.user) {
+          setUserProfile(extractUserData(session.user));
+          if (event === "SIGNED_IN") {
+            syncEngine.sync();
+          }
+        } else {
+          setUserProfile({
+            name: "Guest",
+            avatarUrl: null,
+            email: null,
+            isLoggedIn: false,
+          });
         }
       }
     );
@@ -139,25 +264,65 @@ export default function App() {
         </div>
       </aside>
 
-      {/* Main Full-Width Content Area (No dead margins) */}
+      {/* Main Full-Width Content Area */}
       <main className="flex-1 flex flex-col overflow-y-auto w-full min-w-0">
-        <header className="h-16 border-b border-border bg-surface/80 backdrop-blur sticky top-0 z-10 px-8 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <h2 className="text-base font-bold capitalize text-textPrimary">
-              {activeTab === "ideas"
-                ? "Idea Inbox"
-                : activeTab === "learning"
-                ? "Learning Tracker"
-                : activeTab === "tasks"
-                ? "Tasks & Board"
-                : activeTab}
-            </h2>
-          </div>
+        {/* Sticky Top Header Bar with Welcome & User Photo */}
+        <header className="h-18 border-b border-border bg-surface/90 backdrop-blur sticky top-0 z-10 px-8 flex items-center justify-between shrink-0 shadow-2xs">
+          {activeTab === "dashboard" ? (
+            /* Dashboard: Replace 'Dashboard' with User Photo + Name + Date */
+            <div className="flex items-center gap-3.5">
+              <UserAvatar
+                avatarUrl={userProfile.avatarUrl}
+                name={userProfile.name}
+                isLoggedIn={userProfile.isLoggedIn}
+                size="md"
+              />
+              <div>
+                <h2 className="text-sm md:text-base font-bold text-textPrimary leading-tight">
+                  {userProfile.isLoggedIn
+                    ? `Welcome back, ${userProfile.name}!`
+                    : "Hello, Guest 👋"}
+                </h2>
+                <p className="text-[11px] text-textMuted font-medium mt-0.5">
+                  {new Date().toLocaleDateString(undefined, {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+            </div>
+          ) : (
+            /* Other Tabs: Show Title */
+            <div className="flex items-center gap-3">
+              <h2 className="text-base font-bold capitalize text-textPrimary">
+                {activeTab === "ideas"
+                  ? "Idea Inbox"
+                  : activeTab === "learning"
+                  ? "Learning Tracker"
+                  : activeTab === "tasks"
+                  ? "Tasks & Board"
+                  : activeTab}
+              </h2>
+            </div>
+          )}
 
+          {/* Right Header Actions */}
           <div className="flex items-center gap-3">
+            {!userProfile.isLoggedIn && (
+              <button
+                onClick={() => setActiveTab("settings")}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:bg-surfaceHover text-xs font-semibold text-textSecondary transition"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>Sign In</span>
+              </button>
+            )}
+
             <button
               onClick={() => setIsQuickAddModalOpen(true)}
-              className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg shadow-sm transition"
+              className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg shadow-sm transition active:scale-95"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Task</span>

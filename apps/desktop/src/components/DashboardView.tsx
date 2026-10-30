@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Task, LearningResource, Idea } from "@planner/contracts";
 import { Storage, generateUUID } from "../lib/storage";
-import { supabase } from "../lib/supabase";
 import {
   CheckSquare,
   Clock,
@@ -10,8 +9,6 @@ import {
   Plus,
   ExternalLink,
   ArrowUpRight,
-  User,
-  Sparkles,
 } from "lucide-react";
 import {
   TaskEmptyIllustration,
@@ -33,19 +30,6 @@ export function DashboardView({
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [quickTitle, setQuickTitle] = useState("");
 
-  // User Profile
-  const [userProfile, setUserProfile] = useState<{
-    name: string;
-    avatarUrl: string | null;
-    email: string | null;
-    isLoggedIn: boolean;
-  }>({
-    name: "Guest",
-    avatarUrl: null,
-    email: null,
-    isLoggedIn: false,
-  });
-
   const refreshData = () => {
     setTasks(Storage.getTasks());
     setLearning(Storage.getLearningResources());
@@ -54,56 +38,9 @@ export function DashboardView({
 
   useEffect(() => {
     refreshData();
-
-    // Check Supabase user
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) {
-        const meta = data.user.user_metadata || {};
-        const name =
-          meta.full_name ||
-          meta.name ||
-          data.user.email?.split("@")[0] ||
-          "User";
-        const avatar = meta.avatar_url || meta.picture || null;
-        setUserProfile({
-          name,
-          avatarUrl: avatar,
-          email: data.user.email || null,
-          isLoggedIn: true,
-        });
-      }
-    });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          const meta = session.user.user_metadata || {};
-          const name =
-            meta.full_name ||
-            meta.name ||
-            session.user.email?.split("@")[0] ||
-            "User";
-          const avatar = meta.avatar_url || meta.picture || null;
-          setUserProfile({
-            name,
-            avatarUrl: avatar,
-            email: session.user.email || null,
-            isLoggedIn: true,
-          });
-          refreshData();
-        } else {
-          setUserProfile({
-            name: "Guest",
-            avatarUrl: null,
-            email: null,
-            isLoggedIn: false,
-          });
-        }
-      }
-    );
-
+    window.addEventListener("storage", refreshData);
     return () => {
-      authListener.subscription.unsubscribe();
+      window.removeEventListener("storage", refreshData);
     };
   }, []);
 
@@ -225,71 +162,6 @@ export function DashboardView({
           <div className="text-3xl font-black text-amber-950 dark:text-amber-100 mt-3 font-mono">
             {ideas.length}
           </div>
-        </div>
-      </div>
-
-      {/* 2. User Greeting Banner (No Sync text; shows User DP + Name + Date) */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-surface border border-border rounded-2xl p-5 shadow-sm">
-        <div className="flex items-center gap-4">
-          {userProfile.avatarUrl ? (
-            <img
-              src={userProfile.avatarUrl}
-              alt={userProfile.name}
-              className="w-13 h-13 rounded-2xl object-cover ring-2 ring-primary/20 shadow-md"
-            />
-          ) : (
-            <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-blue-500/20">
-              {userProfile.isLoggedIn ? (
-                userProfile.name.charAt(0).toUpperCase()
-              ) : (
-                <User className="w-6 h-6" />
-              )}
-            </div>
-          )}
-
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold tracking-tight text-textPrimary">
-                {userProfile.isLoggedIn
-                  ? `Welcome back, ${userProfile.name}!`
-                  : "Hello, Guest 👋"}
-              </h2>
-              {userProfile.isLoggedIn && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                  <Sparkles className="w-3 h-3" />
-                  <span>Google Synced</span>
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-textSecondary font-medium mt-0.5">
-              {new Date().toLocaleDateString(undefined, {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
-          </div>
-        </div>
-
-        <div>
-          {!userProfile.isLoggedIn ? (
-            <button
-              onClick={() => onNavigate("settings")}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-semibold shadow-sm transition active:scale-95"
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Connect Google Account</span>
-            </button>
-          ) : (
-            <button
-              onClick={onOpenTaskModal}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surfaceHover hover:bg-border text-xs font-semibold text-textPrimary transition"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Quick Plan</span>
-            </button>
-          )}
         </div>
       </div>
 
