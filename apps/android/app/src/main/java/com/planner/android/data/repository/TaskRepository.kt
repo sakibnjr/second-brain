@@ -6,8 +6,12 @@ import com.planner.android.data.dao.TaskDao
 import com.planner.android.data.models.MutationQueueEntity
 import com.planner.android.data.models.TaskEntity
 import com.planner.android.notifications.ReminderScheduler
+import com.planner.android.sync.SupabaseClient
 import com.planner.android.sync.SyncWorker
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -91,7 +95,14 @@ class TaskRepository(
             )
         )
 
-        context?.let { SyncWorker.enqueueImmediateSync(it) }
+        context?.let { ctx ->
+            SyncWorker.enqueueImmediateSync(ctx)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    SupabaseClient.getInstance(ctx).syncNow()
+                } catch (_: Exception) {}
+            }
+        }
         return task
     }
 
@@ -118,7 +129,14 @@ class TaskRepository(
             )
         )
 
-        context?.let { SyncWorker.enqueueImmediateSync(it) }
+        context?.let { ctx ->
+            SyncWorker.enqueueImmediateSync(ctx)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    SupabaseClient.getInstance(ctx).syncNow()
+                } catch (_: Exception) {}
+            }
+        }
     }
 
     suspend fun deleteTask(taskId: String) {
@@ -150,6 +168,13 @@ class TaskRepository(
             )
         )
 
-        context?.let { SyncWorker.enqueueImmediateSync(it) }
+        context?.let { ctx ->
+            SyncWorker.enqueueImmediateSync(ctx)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    SupabaseClient.getInstance(ctx).syncNow()
+                } catch (_: Exception) {}
+            }
+        }
     }
 }

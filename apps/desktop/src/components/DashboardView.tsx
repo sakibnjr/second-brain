@@ -38,9 +38,9 @@ export function DashboardView({
 
   useEffect(() => {
     refreshData();
-    window.addEventListener("storage", refreshData);
+    const unsub = Storage.subscribe(refreshData);
     return () => {
-      window.removeEventListener("storage", refreshData);
+      unsub();
     };
   }, []);
 

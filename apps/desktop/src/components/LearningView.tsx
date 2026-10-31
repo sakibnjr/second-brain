@@ -47,6 +47,10 @@ export function LearningView() {
 
   useEffect(() => {
     loadData();
+    const unsub = Storage.subscribe(loadData);
+    return () => {
+      unsub();
+    };
   }, []);
 
   const handleSelectResource = (res: LearningResource) => {

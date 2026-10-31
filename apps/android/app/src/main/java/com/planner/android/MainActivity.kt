@@ -80,6 +80,16 @@ class MainActivity : ComponentActivity() {
             ReminderScheduler.rescheduleAllFromDatabase(applicationContext)
         }
 
+        // Live automatic sync heartbeat while app is open (every 6 seconds)
+        lifecycleScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(6000)
+                if (supabaseClient.userProfile.value.isLoggedIn) {
+                    supabaseClient.syncNow()
+                }
+            }
+        }
+
         // Handle Google OAuth deep link if launched via redirect
         handleDeepLink(intent)
 
@@ -92,6 +102,16 @@ class MainActivity : ComponentActivity() {
                     learningRepository = learningRepository,
                     supabaseClient = supabaseClient
                 )
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val supabaseClient = SupabaseClient.getInstance(applicationContext)
+        lifecycleScope.launch {
+            if (supabaseClient.userProfile.value.isLoggedIn) {
+                supabaseClient.syncNow()
             }
         }
     }

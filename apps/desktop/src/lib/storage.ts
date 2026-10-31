@@ -13,6 +13,21 @@ const SESSIONS_KEY = "planner_study_sessions";
 const QUEUE_KEY = "planner_mutation_queue";
 const LAST_SYNC_KEY = "planner_last_sync_time";
 
+const storageListeners: Array<() => void> = [];
+
+export function notifyStorageChange(): void {
+  storageListeners.forEach((fn) => {
+    try {
+      fn();
+    } catch (e) {
+      console.error(e);
+    }
+  });
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("planner_storage_changed"));
+  }
+}
+
 function getLocal<T>(key: string, defaultValue: T): T {
   try {
     const raw = localStorage.getItem(key);
@@ -83,6 +98,7 @@ export const Storage = {
       });
     }
 
+    notifyStorageChange();
     return updated;
   },
 
@@ -106,6 +122,8 @@ export const Storage = {
       status: "pending",
       retry_count: 0,
     });
+
+    notifyStorageChange();
   },
 
   // --- Ideas ---
@@ -148,6 +166,7 @@ export const Storage = {
       });
     }
 
+    notifyStorageChange();
     return updated;
   },
 
@@ -171,6 +190,8 @@ export const Storage = {
       status: "pending",
       retry_count: 0,
     });
+
+    notifyStorageChange();
   },
 
   // --- Learning Resources ---
@@ -212,6 +233,7 @@ export const Storage = {
       });
     }
 
+    notifyStorageChange();
     return updated;
   },
 
@@ -235,6 +257,8 @@ export const Storage = {
       status: "pending",
       retry_count: 0,
     });
+
+    notifyStorageChange();
   },
 
   // --- Study Sessions ---
@@ -276,6 +300,7 @@ export const Storage = {
       });
     }
 
+    notifyStorageChange();
     return updated;
   },
 
@@ -309,6 +334,19 @@ export const Storage = {
     localStorage.setItem(LAST_SYNC_KEY, time);
   },
 
+  // --- Reactive subscription ---
+  subscribe(callback: () => void): () => void {
+    storageListeners.push(callback);
+    return () => {
+      const idx = storageListeners.indexOf(callback);
+      if (idx >= 0) storageListeners.splice(idx, 1);
+    };
+  },
+
+  notifyChange(): void {
+    notifyStorageChange();
+  },
+
   // --- Export / Import ---
   exportAllData() {
     return {
@@ -327,5 +365,6 @@ export const Storage = {
     if (data.learning_resources) setLocal(LEARNING_KEY, data.learning_resources);
     if (data.study_sessions) setLocal(SESSIONS_KEY, data.study_sessions);
     if (data.mutation_queue) setLocal(QUEUE_KEY, data.mutation_queue);
+    notifyStorageChange();
   },
 };

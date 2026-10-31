@@ -141,7 +141,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    syncEngine.sync();
+    syncEngine.init();
     reminderScheduler.start();
 
     // Initial user load
@@ -172,6 +172,7 @@ export default function App() {
     return () => {
       authListener.subscription.unsubscribe();
       reminderScheduler.stop();
+      syncEngine.stopAutoSync();
     };
   }, []);
 

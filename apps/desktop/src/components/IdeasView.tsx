@@ -26,6 +26,10 @@ export function IdeasView() {
 
   useEffect(() => {
     loadIdeas();
+    const unsub = Storage.subscribe(loadIdeas);
+    return () => {
+      unsub();
+    };
   }, []);
 
   const handleCapture = (e: React.FormEvent) => {

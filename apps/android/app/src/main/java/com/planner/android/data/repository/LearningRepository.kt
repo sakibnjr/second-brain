@@ -5,8 +5,12 @@ import com.planner.android.data.dao.LearningDao
 import com.planner.android.data.dao.MutationQueueDao
 import com.planner.android.data.models.LearningResourceEntity
 import com.planner.android.data.models.MutationQueueEntity
+import com.planner.android.sync.SupabaseClient
 import com.planner.android.sync.SyncWorker
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
@@ -67,7 +71,14 @@ class LearningRepository(
             )
         )
 
-        context?.let { SyncWorker.enqueueImmediateSync(it) }
+        context?.let { ctx ->
+            SyncWorker.enqueueImmediateSync(ctx)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    SupabaseClient.getInstance(ctx).syncNow()
+                } catch (_: Exception) {}
+            }
+        }
         return resource
     }
 
@@ -102,7 +113,14 @@ class LearningRepository(
             )
         )
 
-        context?.let { SyncWorker.enqueueImmediateSync(it) }
+        context?.let { ctx ->
+            SyncWorker.enqueueImmediateSync(ctx)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    SupabaseClient.getInstance(ctx).syncNow()
+                } catch (_: Exception) {}
+            }
+        }
     }
 
     suspend fun deleteResource(resourceId: String) {
@@ -130,6 +148,13 @@ class LearningRepository(
             )
         )
 
-        context?.let { SyncWorker.enqueueImmediateSync(it) }
+        context?.let { ctx ->
+            SyncWorker.enqueueImmediateSync(ctx)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    SupabaseClient.getInstance(ctx).syncNow()
+                } catch (_: Exception) {}
+            }
+        }
     }
 }

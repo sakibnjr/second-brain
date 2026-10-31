@@ -26,6 +26,10 @@ export function CalendarView() {
 
   useEffect(() => {
     loadTasks();
+    const unsub = Storage.subscribe(loadTasks);
+    return () => {
+      unsub();
+    };
   }, []);
 
   const handleToggleStatus = (task: Task) => {

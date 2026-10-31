@@ -41,6 +41,10 @@ export function TasksView() {
 
   useEffect(() => {
     loadTasks();
+    const unsub = Storage.subscribe(loadTasks);
+    return () => {
+      unsub();
+    };
   }, []);
 
   const handleQuickAdd = (e: React.FormEvent) => {
