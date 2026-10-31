@@ -140,8 +140,25 @@ class SupabaseClient private constructor(context: Context) {
                 uri.getQueryParameter(key)?.let { params[key] = it }
             }
 
-            val accessToken = params["access_token"]
-            val refreshToken = params["refresh_token"]
+            var accessToken = params["access_token"]
+            var refreshToken = params["refresh_token"]
+            val code = params["code"]
+
+            if (accessToken.isNullOrBlank() && !code.isNullOrBlank()) {
+                val payload = JSONObject().apply {
+                    put("auth_code", code)
+                }
+                val (tokenCode, tokenBody) = httpRequest(
+                    urlStr = "$SUPABASE_URL/auth/v1/token?grant_type=pkce",
+                    method = "POST",
+                    body = payload.toString()
+                )
+                if (tokenCode in 200..299) {
+                    val json = JSONObject(tokenBody)
+                    accessToken = json.optString("access_token")
+                    refreshToken = json.optString("refresh_token")
+                }
+            }
 
             if (accessToken.isNullOrBlank()) {
                 return@withContext Result.failure(Exception("Missing access_token in OAuth redirect"))

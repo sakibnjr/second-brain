@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.planner.android.data.dao.MutationQueueDao
 import com.planner.android.notifications.ReminderScheduler
+import com.planner.android.sync.LocalAuthServer
 import com.planner.android.sync.SupabaseClient
 import com.planner.android.sync.SyncWorker
 import kotlinx.coroutines.launch
@@ -167,6 +168,7 @@ fun SettingsScreen(
                         // Google OAuth Button
                         Button(
                             onClick = {
+                                LocalAuthServer.start(context)
                                 val url = supabaseClient.getGoogleOAuthUrl()
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                                 context.startActivity(intent)

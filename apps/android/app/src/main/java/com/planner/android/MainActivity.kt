@@ -23,6 +23,7 @@ import com.planner.android.data.repository.IdeaRepository
 import com.planner.android.data.repository.LearningRepository
 import com.planner.android.data.repository.TaskRepository
 import com.planner.android.notifications.ReminderScheduler
+import com.planner.android.sync.LocalAuthServer
 import com.planner.android.sync.SupabaseClient
 import com.planner.android.sync.SyncWorker
 import com.planner.android.ui.screens.*
@@ -103,7 +104,8 @@ class MainActivity : ComponentActivity() {
 
     private fun handleDeepLink(intent: Intent?) {
         val uri = intent?.data ?: return
-        if (uri.scheme == "secondbrain" && uri.host == "auth-callback") {
+        if (uri.scheme == "secondbrain" && (uri.host == "auth-callback" || uri.host.isNullOrBlank())) {
+            LocalAuthServer.stop()
             val supabaseClient = SupabaseClient.getInstance(applicationContext)
             lifecycleScope.launch {
                 supabaseClient.handleOAuthCallback(uri)
