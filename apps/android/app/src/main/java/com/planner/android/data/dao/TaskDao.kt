@@ -18,6 +18,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :id LIMIT 1")
     suspend fun getTaskById(id: String): TaskEntity?
 
+    @Query("SELECT * FROM tasks WHERE deletedAt IS NULL AND status != 'completed' AND reminderAt IS NOT NULL")
+    suspend fun getTasksWithActiveReminders(): List<TaskEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task: TaskEntity)
 

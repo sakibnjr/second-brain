@@ -19,6 +19,7 @@ import { TaskModal } from "./components/TaskModal";
 import { BrandWordmark } from "./components/BrandWordmark";
 import { syncEngine } from "./lib/syncEngine";
 import { supabase } from "./lib/supabase";
+import { reminderScheduler } from "./lib/reminderScheduler";
 
 type NavTab =
   | "dashboard"
@@ -141,6 +142,7 @@ export default function App() {
 
   useEffect(() => {
     syncEngine.sync();
+    reminderScheduler.start();
 
     // Initial user load
     supabase.auth.getUser().then(({ data }) => {
@@ -169,6 +171,7 @@ export default function App() {
 
     return () => {
       authListener.subscription.unsubscribe();
+      reminderScheduler.stop();
     };
   }, []);
 

@@ -10,6 +10,9 @@ import com.planner.android.data.repository.LearningRepository
 import com.planner.android.data.repository.TaskRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class DashboardState(
     val todayTasks: List<TaskEntity> = emptyList(),
@@ -44,8 +47,9 @@ class DashboardViewModel(
 
     fun quickAddTask(title: String) {
         if (title.isBlank()) return
+        val todayDue = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()) + "T23:59:59Z"
         viewModelScope.launch {
-            taskRepository.createTask(title = title.trim())
+            taskRepository.createTask(title = title.trim(), dueAt = todayDue)
         }
     }
 

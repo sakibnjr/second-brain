@@ -93,6 +93,27 @@ jobs:
           name: android-packages
           path: dist/android/*
 
+      - name: Determine Release Tag
+        id: android_tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Publish Android APK immediately to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.android_tag.outputs.tag }}
+          name: "Second Brain ${{ steps.android_tag.outputs.tag }}"
+          files: dist/android/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   publish-release:
     name: Publish GitHub Release
     needs: [build-linux, build-android]

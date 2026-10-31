@@ -1,22 +1,41 @@
 package com.planner.android.data.repository
 
+import android.content.Context
 import com.planner.android.data.dao.IdeaDao
 import com.planner.android.data.dao.MutationQueueDao
 import com.planner.android.data.models.IdeaEntity
 import com.planner.android.data.models.MutationQueueEntity
+import com.planner.android.sync.SyncWorker
 import kotlinx.coroutines.flow.Flow
+import org.json.JSONArray
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 
 class IdeaRepository(
     private val ideaDao: IdeaDao,
-    private val mutationQueueDao: MutationQueueDao
+    private val mutationQueueDao: MutationQueueDao,
+    private val context: Context? = null
 ) {
     val activeIdeas: Flow<List<IdeaEntity>> = ideaDao.getActiveIdeasFlow()
     val archivedIdeas: Flow<List<IdeaEntity>> = ideaDao.getArchivedIdeasFlow()
 
     private val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
         timeZone = TimeZone.getTimeZone("UTC")
+    }
+
+    private fun toPayloadJson(idea: IdeaEntity): String {
+        return JSONObject().apply {
+            put("id", idea.id)
+            put("title", idea.title)
+            put("content", idea.content)
+            put("archived_at", idea.archivedAt ?: JSONObject.NULL)
+            put("tags", JSONArray(idea.tags))
+            put("created_at", idea.createdAt)
+            put("updated_at", idea.updatedAt)
+            put("deleted_at", idea.deletedAt ?: JSONObject.NULL)
+            put("version", idea.version)
+        }.toString()
     }
 
     suspend fun createIdea(title: String, content: String = "", tags: List<String> = emptyList()): IdeaEntity {
@@ -36,41 +55,63 @@ class IdeaRepository(
                 entityType = "idea",
                 entityId = idea.id,
                 operation = "insert",
-                payloadJson = """{"id":"${idea.id}","title":"${idea.title}","content":"${idea.content}"}""",
+                payloadJson = toPayloadJson(idea),
                 clientTimestamp = now
             )
         )
+
+        context?.let { SyncWorker.enqueueImmediateSync(it) }
         return idea
     }
 
     suspend fun toggleArchive(idea: IdeaEntity) {
         val now = isoFormat.format(Date())
         val newArchivedAt = if (idea.archivedAt == null) now else null
-        ideaDao.setArchivedStatus(idea.id, newArchivedAt, now)
+        val updated = idea.copy(
+            archivedAt = newArchivedAt,
+            updatedAt = now,
+            version = idea.version + 1
+        )
+        ideaDao.updateIdea(updated)
 
         mutationQueueDao.insertMutation(
             MutationQueueEntity(
                 entityType = "idea",
-                entityId = idea.id,
+                entityId = updated.id,
                 operation = "update",
-                payloadJson = """{"id":"${idea.id}","archived_at":${if (newArchivedAt == null) "null" else "\"$newArchivedAt\""}}""",
+                payloadJson = toPayloadJson(updated),
                 clientTimestamp = now
             )
         )
+
+        context?.let { SyncWorker.enqueueImmediateSync(it) }
     }
 
     suspend fun deleteIdea(ideaId: String) {
         val now = isoFormat.format(Date())
+        val existing = ideaDao.getIdeaById(ideaId)
         ideaDao.softDeleteIdea(ideaId, now)
+
+        val payload = if (existing != null) {
+            toPayloadJson(existing.copy(deletedAt = now, updatedAt = now))
+        } else {
+            JSONObject().apply {
+                put("id", ideaId)
+                put("deleted_at", now)
+                put("updated_at", now)
+            }.toString()
+        }
 
         mutationQueueDao.insertMutation(
             MutationQueueEntity(
                 entityType = "idea",
                 entityId = ideaId,
                 operation = "delete",
-                payloadJson = """{"id":"$ideaId","deleted_at":"$now"}""",
+                payloadJson = payload,
                 clientTimestamp = now
             )
         )
+
+        context?.let { SyncWorker.enqueueImmediateSync(it) }
     }
 }

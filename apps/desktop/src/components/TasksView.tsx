@@ -13,6 +13,7 @@ import {
   LayoutList,
   Kanban,
   GripVertical,
+  Bell,
 } from "lucide-react";
 import { TaskModal } from "./TaskModal";
 import { TaskEmptyIllustration } from "./EmptyIllustrations";
@@ -373,18 +374,35 @@ export function TasksView() {
                               {task.priority}
                             </span>
 
-                            {task.due_at && (
-                              <span
-                                className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${
-                                  isOverdue
-                                    ? "bg-rose-500/15 text-rose-600 font-bold"
-                                    : "text-textSecondary"
-                                }`}
-                              >
-                                <Calendar className="w-3 h-3" />
-                                <span>{task.due_at.split("T")[0]}</span>
-                              </span>
-                            )}
+                            <div className="flex items-center gap-1.5">
+                              {task.reminder_at && (
+                                <span
+                                  title={`Reminder: ${new Date(task.reminder_at).toLocaleString()}`}
+                                  className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                                >
+                                  <Bell className="w-3 h-3" />
+                                  <span>
+                                    {new Date(task.reminder_at).toLocaleTimeString(
+                                      [],
+                                      { hour: "2-digit", minute: "2-digit" }
+                                    )}
+                                  </span>
+                                </span>
+                              )}
+
+                              {task.due_at && (
+                                <span
+                                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${
+                                    isOverdue
+                                      ? "bg-rose-500/15 text-rose-600 font-bold"
+                                      : "text-textSecondary"
+                                  }`}
+                                >
+                                  <Calendar className="w-3 h-3" />
+                                  <span>{task.due_at.split("T")[0]}</span>
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
@@ -467,6 +485,20 @@ export function TasksView() {
                           >
                             <Calendar className="w-3 h-3" />
                             <span>{task.due_at.split("T")[0]}</span>
+                          </span>
+                        )}
+
+                        {task.reminder_at && (
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                            <Bell className="w-3 h-3" />
+                            <span>
+                              {new Date(task.reminder_at).toLocaleString([], {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
                           </span>
                         )}
 

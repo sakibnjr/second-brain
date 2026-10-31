@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { Storage } from "./storage";
+import { reminderScheduler } from "./reminderScheduler";
 import { Task, Idea, LearningResource, StudySession } from "@planner/contracts";
 
 export type SyncState = "idle" | "syncing" | "synced" | "offline" | "error";
@@ -144,6 +145,7 @@ class SyncEngine {
 
       const now = new Date().toISOString();
       Storage.setLastSyncTime(now);
+      reminderScheduler.checkDueReminders().catch(() => {});
       this.notify("synced", `Synced successfully at ${new Date().toLocaleTimeString()}`);
       this.isRunning = false;
       return { success: true };

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { Storage } from "../lib/storage";
 import { syncEngine, SyncState } from "../lib/syncEngine";
+import { reminderScheduler } from "../lib/reminderScheduler";
 import { BrandWordmark } from "./BrandWordmark";
 import {
   LogOut,
@@ -18,6 +19,7 @@ import {
   User,
   HardDrive,
   Laptop,
+  Bell,
 } from "lucide-react";
 
 export function SettingsView() {
@@ -746,6 +748,20 @@ export function SettingsView() {
                   />
                 </label>
               </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  reminderScheduler.notify(
+                    "🔔 Second Brain Reminder Active",
+                    "Native desktop notifications are working on your Linux system."
+                  )
+                }
+                className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border border-border bg-background hover:bg-surfaceHover text-xs font-bold text-textPrimary transition active:scale-95"
+              >
+                <Bell className="w-3.5 h-3.5 text-purple-500" />
+                <span>Send Test Notification</span>
+              </button>
             </div>
           </div>
 

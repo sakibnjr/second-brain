@@ -40,14 +40,21 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
         _statusFilter.value = filter
     }
 
-    fun createTask(title: String, description: String? = null, priority: String = "medium", dueAt: String? = null) {
+    fun createTask(
+        title: String,
+        description: String? = null,
+        priority: String = "medium",
+        dueAt: String? = null,
+        reminderAt: String? = null
+    ) {
         if (title.isBlank()) return
         viewModelScope.launch {
             repository.createTask(
                 title = title.trim(),
                 description = description?.trim(),
                 priority = priority,
-                dueAt = dueAt
+                dueAt = dueAt?.ifBlank { null },
+                reminderAt = reminderAt?.ifBlank { null }
             )
         }
     }

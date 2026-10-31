@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Task, TaskPriority, TaskStatus } from "@planner/contracts";
-import { X, Calendar, Flag } from "lucide-react";
+import { X, Calendar, Flag, Bell } from "lucide-react";
 import { Storage, generateUUID } from "../lib/storage";
+import { reminderScheduler } from "../lib/reminderScheduler";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -9,6 +10,16 @@ interface TaskModalProps {
   onSave: (task: Task) => void;
   initialTask?: Task | null;
   defaultDate?: string;
+}
+
+function toLocalDateTimeInput(isoStr?: string | null): string {
+  if (!isoStr) return "";
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
 }
 
 export function TaskModal({
@@ -23,6 +34,7 @@ export function TaskModal({
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [status, setStatus] = useState<TaskStatus>("todo");
   const [dueDate, setDueDate] = useState("");
+  const [reminderAt, setReminderAt] = useState("");
   const [tagsInput, setTagsInput] = useState("");
 
   useEffect(() => {
@@ -36,6 +48,7 @@ export function TaskModal({
           ? new Date(initialTask.due_at).toISOString().split("T")[0]
           : ""
       );
+      setReminderAt(toLocalDateTimeInput(initialTask.reminder_at));
       setTagsInput(initialTask.tags ? initialTask.tags.join(", ") : "");
     } else {
       setTitle("");
@@ -43,6 +56,7 @@ export function TaskModal({
       setPriority("medium");
       setStatus("todo");
       setDueDate(defaultDate || "");
+      setReminderAt("");
       setTagsInput("");
     }
   }, [initialTask, defaultDate, isOpen]);
@@ -58,6 +72,11 @@ export function TaskModal({
       .map((t) => t.trim())
       .filter(Boolean);
 
+    const parsedReminder =
+      reminderAt && !isNaN(new Date(reminderAt).getTime())
+        ? new Date(reminderAt).toISOString()
+        : null;
+
     const task: Task = {
       id: initialTask?.id || generateUUID(),
       title: title.trim(),
@@ -65,7 +84,7 @@ export function TaskModal({
       priority,
       status,
       due_at: dueDate ? new Date(dueDate).toISOString() : null,
-      reminder_at: null,
+      reminder_at: parsedReminder,
       tags,
       created_at: initialTask?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -74,6 +93,7 @@ export function TaskModal({
     };
 
     Storage.saveTask(task);
+    reminderScheduler.checkDueReminders().catch(() => {});
     onSave(task);
     onClose();
   };
@@ -151,6 +171,30 @@ export function TaskModal({
                 className="w-full px-3 py-2 rounded-lg border border-border bg-background text-textPrimary text-sm focus:outline-none focus:ring-2 focus:ring-primary transition"
               />
             </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold text-textSecondary flex items-center gap-1.5">
+                <Bell className="w-3.5 h-3.5 text-purple-500" />
+                <span>Native Reminder (Date & Time)</span>
+              </label>
+              {reminderAt && (
+                <button
+                  type="button"
+                  onClick={() => setReminderAt("")}
+                  className="text-[11px] text-rose-500 hover:underline font-medium"
+                >
+                  Clear reminder
+                </button>
+              )}
+            </div>
+            <input
+              type="datetime-local"
+              value={reminderAt}
+              onChange={(e) => setReminderAt(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-textPrimary text-sm focus:outline-none focus:ring-2 focus:ring-primary transition"
+            />
           </div>
 
           <div>

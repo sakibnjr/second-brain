@@ -18,6 +18,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.planner.android.data.models.TaskEntity
 import com.planner.android.ui.viewmodels.TaskViewModel
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -144,8 +149,8 @@ fun TasksScreen(viewModel: TaskViewModel) {
     if (showAddDialog) {
         AddTaskDialog(
             onDismiss = { showAddDialog = false },
-            onConfirm = { title, desc, priority ->
-                viewModel.createTask(title, desc, priority)
+            onConfirm = { title, desc, priority, dueAt, reminderAt ->
+                viewModel.createTask(title, desc, priority, dueAt, reminderAt)
                 showAddDialog = false
             }
         )
@@ -187,7 +192,10 @@ fun TaskCardItem(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     Text(
                         text = task.title,
                         style = MaterialTheme.typography.bodyMedium,
@@ -217,14 +225,57 @@ fun TaskCardItem(
                         maxLines = 2
                     )
                 }
-                if (!task.dueAt.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Due: ${task.dueAt.take(10)}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 11.sp
-                    )
+                if (!task.dueAt.isNullOrBlank() || !task.reminderAt.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (!task.dueAt.isNullOrBlank()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Event,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(12.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "Due: ${task.dueAt.take(10)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                        if (!task.reminderAt.isNullOrBlank()) {
+                            Surface(
+                                color = Color(0xFF9333EA).copy(alpha = 0.14f),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.NotificationsActive,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(11.dp),
+                                        tint = Color(0xFF9333EA)
+                                    )
+                                    Text(
+                                        text = task.reminderAt.replace("T", " ").take(16),
+                                        color = Color(0xFF9333EA),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
             IconButton(onClick = onDelete) {
@@ -242,17 +293,26 @@ fun TaskCardItem(
 @Composable
 fun AddTaskDialog(
     onDismiss: () -> Unit,
-    onConfirm: (String, String?, String) -> Unit
+    onConfirm: (String, String?, String, String?, String?) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var priority by remember { mutableStateOf("medium") }
+    var dueAt by remember { mutableStateOf("") }
+    var reminderPreset by remember { mutableStateOf("none") } // none, 10m, 1h, tomorrow9am
+
+    val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US) }
+    val isoUtcFormat = remember {
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("New Task", fontWeight = FontWeight.Bold) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
@@ -281,13 +341,80 @@ fun AddTaskDialog(
                         )
                     }
                 }
+
+                // Due Date Quick Selection
+                Text("Due Date:", style = MaterialTheme.typography.labelMedium)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val todayStr = dateFormat.format(Date())
+                    val calTomorrow = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, 1) }
+                    val tomorrowStr = dateFormat.format(calTomorrow.time)
+                    val options = listOf(
+                        "" to "None",
+                        todayStr to "Today",
+                        tomorrowStr to "Tomorrow"
+                    )
+                    items(options) { (valStr, label) ->
+                        FilterChip(
+                            selected = dueAt == valStr,
+                            onClick = { dueAt = valStr },
+                            label = { Text(label, fontSize = 11.sp) },
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    }
+                }
+
+                // Native Reminder Quick Selection
+                Text("Native Alarm Reminder:", style = MaterialTheme.typography.labelMedium)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val reminderOptions = listOf(
+                        "none" to "Off",
+                        "10m" to "In 10 min",
+                        "1h" to "In 1 hour",
+                        "tomorrow9am" to "Tomorrow 9 AM"
+                    )
+                    items(reminderOptions) { (key, label) ->
+                        FilterChip(
+                            selected = reminderPreset == key,
+                            onClick = { reminderPreset = key },
+                            label = { Text(label, fontSize = 11.sp) },
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
                     if (title.isNotBlank()) {
-                        onConfirm(title, description.ifBlank { null }, priority)
+                        val computedReminderIso: String? = when (reminderPreset) {
+                            "10m" -> {
+                                val cal = Calendar.getInstance().apply { add(Calendar.MINUTE, 10) }
+                                isoUtcFormat.format(cal.time)
+                            }
+                            "1h" -> {
+                                val cal = Calendar.getInstance().apply { add(Calendar.HOUR_OF_DAY, 1) }
+                                isoUtcFormat.format(cal.time)
+                            }
+                            "tomorrow9am" -> {
+                                val cal = Calendar.getInstance().apply {
+                                    add(Calendar.DAY_OF_YEAR, 1)
+                                    set(Calendar.HOUR_OF_DAY, 9)
+                                    set(Calendar.MINUTE, 0)
+                                    set(Calendar.SECOND, 0)
+                                }
+                                isoUtcFormat.format(cal.time)
+                            }
+                            else -> null
+                        }
+                        val dueAtIso = if (dueAt.isNotBlank()) "${dueAt}T23:59:59Z" else null
+                        onConfirm(
+                            title,
+                            description.ifBlank { null },
+                            priority,
+                            dueAtIso,
+                            computedReminderIso
+                        )
                     }
                 },
                 enabled = title.isNotBlank(),
