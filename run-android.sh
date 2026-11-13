@@ -12,10 +12,16 @@ gradle :app:assembleDebug --build-cache
 
 APK_PATH="$DIR/apps/android/app/build/outputs/apk/debug/app-debug.apk"
 
-echo "📲 [Second Brain] Installing on connected device via adb..."
-adb install -r "$APK_PATH"
+TARGET_DEVICE=$(adb devices | grep -E "device$" | head -n 1 | awk '{print $1}')
 
-echo "🚀 [Second Brain] Launching app..."
-adb shell am start -n com.planner.android/.MainActivity
+if [ -n "$TARGET_DEVICE" ]; then
+    echo "📲 [Second Brain] Installing on $TARGET_DEVICE via adb..."
+    adb -s "$TARGET_DEVICE" install -r "$APK_PATH"
+
+    echo "🚀 [Second Brain] Launching app on $TARGET_DEVICE..."
+    adb -s "$TARGET_DEVICE" shell am start -n com.planner.android/.MainActivity
+else
+    echo "⚠️ No ADB device found to install APK."
+fi
 
 echo "✅ [Second Brain] Done! Native app is live on your phone."

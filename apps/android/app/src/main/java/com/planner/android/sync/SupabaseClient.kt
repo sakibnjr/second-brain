@@ -10,10 +10,15 @@ import com.planner.android.data.models.LearningResourceEntity
 import com.planner.android.data.models.StudySessionEntity
 import com.planner.android.data.models.TaskEntity
 import com.planner.android.notifications.ReminderScheduler
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -316,6 +321,17 @@ class SupabaseClient private constructor(context: Context) {
         return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
+    private var debounceJob: Job? = null
+    private val clientScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    fun scheduleDebouncedSync(delayMs: Long = 2000L) {
+        debounceJob?.cancel()
+        debounceJob = clientScope.launch {
+            delay(delayMs)
+            syncNow()
+        }
+    }
+
     suspend fun syncNow(): Result<Unit> = withContext(Dispatchers.IO) {
         syncMutex.withLock {
             try {
@@ -339,21 +355,18 @@ class SupabaseClient private constructor(context: Context) {
                     return@withContext Result.failure(Exception("Not authenticated"))
                 }
 
-                _syncStatus.value = SyncStatus(
-                    state = "syncing",
-                    message = "Synchronizing with Supabase...",
-                    lastSyncTime = prefs.getString(KEY_LAST_SYNC, null)
-                )
-
                 val db = AppDatabase.getDatabase(appContext)
                 val mutationDao = db.mutationQueueDao()
                 val taskDao = db.taskDao()
                 val ideaDao = db.ideaDao()
                 val learningDao = db.learningDao()
 
-                // Verify or refresh token if needed
+                // 1. Prune dead or excessively retried mutations (>10 retries)
+                mutationDao.pruneStaleMutations()
+
+                // 2. Verify or refresh token if needed (handles 401 & 403)
                 val testUser = httpRequest("$SUPABASE_URL/auth/v1/user", "GET", accessToken = accessToken)
-                if (testUser.first == 401) {
+                if (testUser.first !in 200..299) {
                     val refreshed = refreshAccessToken()
                     if (refreshed != null) {
                         accessToken = refreshed
@@ -367,9 +380,19 @@ class SupabaseClient private constructor(context: Context) {
                     }
                 }
 
-                // 1. Push pending mutations
+                _syncStatus.value = SyncStatus(
+                    state = "syncing",
+                    message = "Synchronizing with Supabase...",
+                    lastSyncTime = prefs.getString(KEY_LAST_SYNC, null)
+                )
+
+                // 3. Push pending mutations (with immediate break on auth failure)
                 val pending = mutationDao.getPendingMutations()
                 for (item in pending) {
+                    if (item.retryCount >= 10) {
+                        mutationDao.updateMutationStatus(item.id, "failed", "Max retries reached")
+                        continue
+                    }
                     try {
                         val payloadObj = buildFullPayloadForMutation(item.entityType, item.entityId, item.payloadJson, userId, db)
                         val tableName = when (item.entityType) {
@@ -389,6 +412,30 @@ class SupabaseClient private constructor(context: Context) {
                             )
                             if (code in 200..299) {
                                 mutationDao.deleteMutation(item.id)
+                            } else if (code == 401 || code == 403) {
+                                // Token expired during sync batch, attempt refresh
+                                val refreshed = refreshAccessToken()
+                                if (refreshed != null) {
+                                    accessToken = refreshed
+                                    val (retryCode, retryErr) = httpRequest(
+                                        urlStr = "$SUPABASE_URL/rest/v1/$tableName?on_conflict=id",
+                                        method = "POST",
+                                        body = payloadObj.toString(),
+                                        accessToken = accessToken,
+                                        extraHeaders = mapOf("Prefer" to "resolution=merge-duplicates,return=minimal")
+                                    )
+                                    if (retryCode in 200..299) {
+                                        mutationDao.deleteMutation(item.id)
+                                        continue
+                                    }
+                                }
+                                mutationDao.updateMutationStatus(item.id, "pending", "HTTP $code: $errBody")
+                                _syncStatus.value = SyncStatus(
+                                    state = "error",
+                                    message = "Session expired · Please sign in again",
+                                    lastSyncTime = prefs.getString(KEY_LAST_SYNC, null)
+                                )
+                                return@withContext Result.failure(Exception("Auth error: HTTP $code"))
                             } else {
                                 mutationDao.updateMutationStatus(item.id, "pending", "HTTP $code: $errBody")
                             }
@@ -400,12 +447,18 @@ class SupabaseClient private constructor(context: Context) {
                     }
                 }
 
-                // 2. Pull remote changes from Supabase
+                // 4. Pull remote changes from Supabase (Delta Sync)
                 val encodedUserId = URLEncoder.encode(userId, "UTF-8")
+                val lastSync = prefs.getString(KEY_LAST_SYNC, null)
+                val timeFilter = if (!lastSync.isNullOrBlank()) {
+                    "&updated_at=gt.${URLEncoder.encode(lastSync, "UTF-8")}"
+                } else {
+                    ""
+                }
 
                 // Pull Tasks
                 val tasksRes = httpRequest(
-                    urlStr = "$SUPABASE_URL/rest/v1/tasks?user_id=eq.$encodedUserId&select=*",
+                    urlStr = "$SUPABASE_URL/rest/v1/tasks?user_id=eq.$encodedUserId$timeFilter&select=*",
                     method = "GET",
                     accessToken = accessToken
                 )
@@ -425,7 +478,7 @@ class SupabaseClient private constructor(context: Context) {
 
                 // Pull Ideas
                 val ideasRes = httpRequest(
-                    urlStr = "$SUPABASE_URL/rest/v1/ideas?user_id=eq.$encodedUserId&select=*",
+                    urlStr = "$SUPABASE_URL/rest/v1/ideas?user_id=eq.$encodedUserId$timeFilter&select=*",
                     method = "GET",
                     accessToken = accessToken
                 )
@@ -443,7 +496,7 @@ class SupabaseClient private constructor(context: Context) {
 
                 // Pull Learning Resources
                 val learningRes = httpRequest(
-                    urlStr = "$SUPABASE_URL/rest/v1/learning_resources?user_id=eq.$encodedUserId&select=*",
+                    urlStr = "$SUPABASE_URL/rest/v1/learning_resources?user_id=eq.$encodedUserId$timeFilter&select=*",
                     method = "GET",
                     accessToken = accessToken
                 )
@@ -461,7 +514,7 @@ class SupabaseClient private constructor(context: Context) {
 
                 // Pull Study Sessions
                 val sessionsRes = httpRequest(
-                    urlStr = "$SUPABASE_URL/rest/v1/study_sessions?user_id=eq.$encodedUserId&select=*",
+                    urlStr = "$SUPABASE_URL/rest/v1/study_sessions?user_id=eq.$encodedUserId$timeFilter&select=*",
                     method = "GET",
                     accessToken = accessToken
                 )

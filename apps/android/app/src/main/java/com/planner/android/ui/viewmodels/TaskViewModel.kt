@@ -61,12 +61,14 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
 
     fun toggleTaskStatus(task: TaskEntity) {
         viewModelScope.launch {
-            val nextStatus = when (task.status) {
-                "todo" -> "in_progress"
-                "in_progress" -> "completed"
-                else -> "todo"
-            }
+            val nextStatus = if (task.status == "completed") "todo" else "completed"
             repository.updateTaskStatus(task, nextStatus)
+        }
+    }
+
+    fun updateTask(task: TaskEntity) {
+        viewModelScope.launch {
+            repository.updateTask(task)
         }
     }
 

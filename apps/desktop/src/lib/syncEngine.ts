@@ -12,8 +12,19 @@ class SyncEngine {
   public currentState: SyncState = "idle";
   public lastError: string | null = null;
   private pollTimer: number | null = null;
+  private debounceTimer: number | null = null;
   private realtimeChannel: RealtimeChannel | null = null;
   private currentUserId: string | null = null;
+
+  public scheduleDebouncedSync(delay = 1500) {
+    if (this.debounceTimer !== null) {
+      clearTimeout(this.debounceTimer);
+    }
+    this.debounceTimer = window.setTimeout(() => {
+      this.debounceTimer = null;
+      this.sync();
+    }, delay);
+  }
 
   public subscribe(cb: (state: SyncState, message?: string) => void) {
     this.listeners.push(cb);
@@ -31,10 +42,10 @@ class SyncEngine {
 
   public init() {
     this.startAutoSync();
-    // Whenever local storage changes and has pending mutations, push immediately
+    // Whenever local storage changes and has pending mutations, push debounced
     Storage.subscribe(() => {
       if (Storage.getMutationQueue().length > 0 && !this.isRunning) {
-        this.sync();
+        this.scheduleDebouncedSync(1000);
       }
     });
   }
@@ -45,12 +56,12 @@ class SyncEngine {
     // 1. Initial sync
     this.sync();
 
-    // 2. Fast background polling (every 6 seconds)
+    // 2. Gentle fallback background polling (every 5 minutes, only if online)
     this.pollTimer = window.setInterval(() => {
       if (navigator.onLine && !this.isRunning) {
         this.sync();
       }
-    }, 6000);
+    }, 300000);
 
     // 3. Sync on window focus and online event
     if (typeof window !== "undefined") {
@@ -66,6 +77,10 @@ class SyncEngine {
     }
     if (this.realtimeChannel) {
       supabase.removeChannel(this.realtimeChannel);
+      if (this.debounceTimer !== null) {
+        clearTimeout(this.debounceTimer);
+        this.debounceTimer = null;
+      }
       this.realtimeChannel = null;
     }
   }
@@ -84,22 +99,22 @@ class SyncEngine {
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "tasks", filter: `user_id=eq.${userId}` },
-          () => { this.sync(); }
+          () => { this.scheduleDebouncedSync(1500); }
         )
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "ideas", filter: `user_id=eq.${userId}` },
-          () => { this.sync(); }
+          () => { this.scheduleDebouncedSync(1500); }
         )
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "learning_resources", filter: `user_id=eq.${userId}` },
-          () => { this.sync(); }
+          () => { this.scheduleDebouncedSync(1500); }
         )
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "study_sessions", filter: `user_id=eq.${userId}` },
-          () => { this.sync(); }
+          () => { this.scheduleDebouncedSync(1500); }
         )
         .subscribe();
     } catch (e) {

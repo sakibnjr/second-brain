@@ -9,7 +9,17 @@ import kotlinx.coroutines.launch
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+        val action = intent.action ?: return
+        val supportedActions = setOf(
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_LOCKED_BOOT_COMPLETED,
+            "android.intent.action.QUICKBOOT_POWERON",
+            "com.htc.intent.action.QUICKBOOT_POWERON",
+            Intent.ACTION_MY_PACKAGE_REPLACED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_TIMEZONE_CHANGED
+        )
+        if (action in supportedActions) {
             val pendingResult = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
                 try {

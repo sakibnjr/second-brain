@@ -2,11 +2,15 @@ package com.planner.android.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,7 +38,6 @@ fun SettingsScreen(
 
     val userProfile by supabaseClient.userProfile.collectAsState()
     val syncStatus by supabaseClient.syncStatus.collectAsState()
-    val pendingMutations by mutationQueueDao.getPendingCountFlow().collectAsState(initial = 0)
 
     var showEmailForm by remember { mutableStateOf(false) }
     var isSignUpMode by remember { mutableStateOf(false) }
@@ -46,33 +49,51 @@ fun SettingsScreen(
 
     val isSyncing = syncStatus.state == "syncing"
 
+    // Human-friendly status translation
+    val userFriendlyStatus = when {
+        isSyncing -> "Syncing your changes with cloud..."
+        userProfile.isLoggedIn && syncStatus.state == "synced" -> "All your tasks & notes are up to date"
+        userProfile.isLoggedIn -> "Connected to cloud vault"
+        else -> "Changes are saved locally on your phone"
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Settings & Cloud Sync",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Manage your account, WorkManager cloud sync, and native alarms.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp, bottom = 2.dp)
+            ) {
+                Text(
+                    text = "PREFERENCES",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 1.sp
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Settings",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    letterSpacing = (-0.5).sp
+                )
+            }
         }
 
-        // 1. Account & Authentication Section
+        // 1. Account & Identity Section
         item {
-            Card(
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                shape = RoundedCornerShape(18.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -80,49 +101,59 @@ fun SettingsScreen(
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                color = Color(0xFF2563EB).copy(alpha = 0.15f),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.size(42.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            shape = CircleShape,
+                            modifier = Modifier.size(46.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (userProfile.isLoggedIn && !userProfile.name.isNullOrBlank()) {
+                                    Text(
+                                        text = userProfile.name.take(1).uppercase(),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                } else {
                                     Icon(
                                         Icons.Default.AccountCircle,
                                         contentDescription = null,
-                                        tint = Color(0xFF2563EB)
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(26.dp)
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = if (userProfile.isLoggedIn) userProfile.name else "Local Vault (Guest Mode)",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = if (userProfile.isLoggedIn)
-                                        (userProfile.email ?: "Authenticated with Supabase")
-                                    else
-                                        "Sign in to sync across Linux & Android",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                )
-                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (userProfile.isLoggedIn) userProfile.name else "Local Vault",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = if (userProfile.isLoggedIn)
+                                    (userProfile.email ?: "Active Account")
+                                else
+                                    "Sign in to sync across desktop and phone",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
                         }
 
                         if (userProfile.isLoggedIn) {
                             Surface(
-                                color = Color(0xFF059669).copy(alpha = 0.15f),
+                                color = Color(0xFF10B981).copy(alpha = 0.14f),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
                                 Text(
-                                    text = "ACTIVE",
-                                    color = Color(0xFF059669),
+                                    text = "CONNECTED",
+                                    color = Color(0xFF10B981),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -134,14 +165,15 @@ fun SettingsScreen(
                     if (authFeedback != null) {
                         Surface(
                             color = if (isAuthError) Color(0xFFEF4444).copy(alpha = 0.12f)
-                            else Color(0xFF059669).copy(alpha = 0.12f),
+                            else Color(0xFF10B981).copy(alpha = 0.12f),
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
                                 text = authFeedback ?: "",
-                                color = if (isAuthError) Color(0xFFEF4444) else Color(0xFF059669),
+                                color = if (isAuthError) Color(0xFFEF4444) else Color(0xFF10B981),
                                 style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
                                 modifier = Modifier.padding(10.dp)
                             )
                         }
@@ -152,48 +184,50 @@ fun SettingsScreen(
                             onClick = {
                                 scope.launch {
                                     supabaseClient.signOut()
-                                    authFeedback = "Signed out. Working in offline guest mode."
+                                    authFeedback = "Signed out. Vault is currently in local mode."
                                     isAuthError = false
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Icon(Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Sign Out of Second Brain", fontWeight = FontWeight.SemiBold)
+                            Text("Sign Out")
                         }
                     } else {
-                        // Google OAuth Button
                         Button(
                             onClick = {
                                 LocalAuthServer.start(context)
                                 val url = supabaseClient.getGoogleOAuthUrl()
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                context.startActivity(intent)
+                                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                }
+                                context.startActivity(browserIntent)
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Icon(Icons.Default.Login, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Continue with Google", fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("Sign in with Google", fontWeight = FontWeight.Bold)
                         }
 
                         TextButton(
                             onClick = { showEmailForm = !showEmailForm },
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = if (showEmailForm) "Hide email / password form" else "Or sign in with email & password",
+                                text = if (showEmailForm) "Hide email form" else "Or sign in with email & password",
                                 fontSize = 12.sp
                             )
                         }
 
                         if (showEmailForm) {
-                            HorizontalDivider()
+                            HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                        thickness = 0.5.dp
+                    )
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 FilterChip(
                                     selected = !isSignUpMode,
@@ -265,130 +299,117 @@ fun SettingsScreen(
             }
         }
 
-        // 2. Sync Engine & WorkManager Section
+        // 2. Cloud Sync Section
         item {
-            Card(
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                shape = RoundedCornerShape(18.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                color = Color(0xFF059669).copy(alpha = 0.15f),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        Icons.Default.Sync,
-                                        contentDescription = null,
-                                        tint = Color(0xFF059669)
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Cloud Sync Engine",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "WorkManager background replication",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                )
-                            }
-                        }
-
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    supabaseClient.syncNow()
-                                }
-                            },
-                            enabled = !isSyncing,
-                            shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Text(if (isSyncing) "Syncing..." else "Sync Now", fontSize = 12.sp)
-                        }
-                    }
-
-                    HorizontalDivider()
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Status",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
-                        val badgeColor = when (syncStatus.state) {
-                            "synced" -> Color(0xFF059669)
-                            "syncing" -> Color(0xFFF59E0B)
-                            "error" -> Color(0xFFEF4444)
-                            else -> Color(0xFF64748B)
-                        }
                         Surface(
-                            color = badgeColor.copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(6.dp)
+                            color = Color(0xFF10B981).copy(alpha = 0.14f),
+                            shape = CircleShape,
+                            modifier = Modifier.size(40.dp)
                         ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Default.CloudSync,
+                                    contentDescription = null,
+                                    tint = Color(0xFF10B981),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
                             Text(
-                                text = syncStatus.message.uppercase(),
-                                color = badgeColor,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                text = "Cloud Synchronization",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Continuous real-time replication",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         }
                     }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                        thickness = 0.5.dp
+                    )
+
+                    // Clean user-friendly status banner
+                    Surface(
+                        color = when {
+                            isSyncing -> Color(0xFFF59E0B).copy(alpha = 0.1f)
+                            userProfile.isLoggedIn -> Color(0xFF10B981).copy(alpha = 0.1f)
+                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = "Pending Offline Mutations",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
-                        Text(
-                            text = "$pendingMutations queued",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                when {
+                                    isSyncing -> Icons.Default.Sync
+                                    userProfile.isLoggedIn -> Icons.Default.CheckCircle
+                                    else -> Icons.Default.CloudQueue
+                                },
+                                contentDescription = null,
+                                tint = when {
+                                    isSyncing -> Color(0xFFF59E0B)
+                                    userProfile.isLoggedIn -> Color(0xFF10B981)
+                                    else -> Color.Gray
+                                },
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = userFriendlyStatus,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = when {
+                                    isSyncing -> Color(0xFFD97706)
+                                    userProfile.isLoggedIn -> Color(0xFF059669)
+                                    else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                }
+                            )
+                        }
                     }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                supabaseClient.syncNow()
+                            }
+                        },
+                        enabled = !isSyncing,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = "Background Schedule",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        Icon(
+                            Icons.Default.Sync,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "WorkManager (15m Periodic)",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF059669)
+                            text = if (isSyncing) "Syncing..." else "Sync Now",
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -397,11 +418,11 @@ fun SettingsScreen(
 
         // 3. Native Reminders & Notifications Section
         item {
-            Card(
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                shape = RoundedCornerShape(18.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -412,40 +433,99 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            color = Color(0xFF9333EA).copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFF9333EA).copy(alpha = 0.14f),
+                            shape = CircleShape,
                             modifier = Modifier.size(40.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     Icons.Default.NotificationsActive,
                                     contentDescription = null,
-                                    tint = Color(0xFF9333EA)
+                                    tint = Color(0xFF9333EA),
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Native Reminders & Alarms",
+                                text = "Task Reminders & Alarms",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Exact Android AlarmManager & reboot persistence",
+                                text = "Receive exact alerts even if the app is closed",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         }
                     }
 
+                    val notificationsAllowed = remember { mutableStateOf(ReminderScheduler.hasNotificationPermission(context)) }
+                    val exactAlarmsAllowed = remember { mutableStateOf(ReminderScheduler.canScheduleExactAlarms(context)) }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val notifColor = if (notificationsAllowed.value) Color(0xFF10B981) else Color(0xFFEF4444)
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable {
+                                    if (!notificationsAllowed.value) {
+                                        ReminderScheduler.openNotificationSettings(context)
+                                    }
+                                },
+                            shape = RoundedCornerShape(10.dp),
+                            color = notifColor.copy(alpha = 0.10f),
+                            border = BorderStroke(1.dp, notifColor.copy(alpha = 0.25f))
+                        ) {
+                            Text(
+                                text = if (notificationsAllowed.value) "Notifications: On" else "Notifications: Off (Tap)",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = notifColor,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)
+                            )
+                        }
+
+                        val alarmColor = if (exactAlarmsAllowed.value) Color(0xFF10B981) else Color(0xFFF59E0B)
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable {
+                                    if (!exactAlarmsAllowed.value) {
+                                        ReminderScheduler.openExactAlarmSettings(context)
+                                    }
+                                },
+                            shape = RoundedCornerShape(10.dp),
+                            color = alarmColor.copy(alpha = 0.10f),
+                            border = BorderStroke(1.dp, alarmColor.copy(alpha = 0.25f))
+                        ) {
+                            Text(
+                                text = if (exactAlarmsAllowed.value) "Exact Alarms: On" else "Exact Alarms: Off (Tap)",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = alarmColor,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)
+                            )
+                        }
+                    }
+
                     OutlinedButton(
                         onClick = {
-                            ReminderScheduler.showNotification(
-                                context = context,
-                                title = "🔔 Second Brain Reminder Active",
-                                body = "Native Android notifications and exact task alarms are active!"
-                            )
+                            notificationsAllowed.value = ReminderScheduler.hasNotificationPermission(context)
+                            exactAlarmsAllowed.value = ReminderScheduler.canScheduleExactAlarms(context)
+                            if (!notificationsAllowed.value) {
+                                ReminderScheduler.openNotificationSettings(context)
+                            } else {
+                                ReminderScheduler.showNotification(
+                                    context = context,
+                                    title = "🔔 Second Brain Reminder",
+                                    body = "Native task reminders and alarms are active!"
+                                )
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
@@ -460,11 +540,11 @@ fun SettingsScreen(
 
         // 4. About & Version
         item {
-            Card(
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                shape = RoundedCornerShape(18.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -476,20 +556,20 @@ fun SettingsScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Second Brain for Android is built with Kotlin, Jetpack Compose, Room SQLite, and WorkManager. Your thoughts, tasks, and learning tracks stay offline-accessible and sync seamlessly with your Linux desktop.",
+                        text = "Second Brain helps you organize daily tasks, capture ideas, and track learning goals—offline-first and synced seamlessly across your devices.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         lineHeight = 18.sp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Version 1.0.0 · Linux Mint & Android Edition",
+                        text = "Version 1.1.0",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(84.dp))
         }
     }
 }

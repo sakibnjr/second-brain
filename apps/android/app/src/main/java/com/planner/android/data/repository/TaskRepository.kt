@@ -1,6 +1,7 @@
 package com.planner.android.data.repository
 
 import android.content.Context
+import com.planner.android.data.GamificationManager
 import com.planner.android.data.dao.MutationQueueDao
 import com.planner.android.data.dao.TaskDao
 import com.planner.android.data.models.MutationQueueEntity
@@ -66,13 +67,16 @@ class TaskRepository(
         tags: List<String> = emptyList()
     ): TaskEntity {
         val now = isoFormat.format(Date())
+        val defaultTodayDue = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()) + "T23:59:59Z"
+        val resolvedDueAt = dueAt?.ifBlank { null } ?: defaultTodayDue
+
         val task = TaskEntity(
             id = UUID.randomUUID().toString(),
             title = title.trim(),
             description = description?.trim(),
             status = "todo",
             priority = priority,
-            dueAt = dueAt,
+            dueAt = resolvedDueAt,
             reminderAt = reminderAt,
             tags = tags,
             createdAt = now,
@@ -96,12 +100,7 @@ class TaskRepository(
         )
 
         context?.let { ctx ->
-            SyncWorker.enqueueImmediateSync(ctx)
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    SupabaseClient.getInstance(ctx).syncNow()
-                } catch (_: Exception) {}
-            }
+            SupabaseClient.getInstance(ctx).scheduleDebouncedSync()
         }
         return task
     }
@@ -110,6 +109,34 @@ class TaskRepository(
         val now = isoFormat.format(Date())
         val updated = task.copy(
             status = newStatus,
+            updatedAt = now,
+            version = task.version + 1
+        )
+        taskDao.updateTask(updated)
+
+        context?.let {
+            GamificationManager.onTaskStatusChanged(it, task, newStatus)
+            ReminderScheduler.scheduleTaskReminder(it, updated)
+        }
+
+        mutationQueueDao.insertMutation(
+            MutationQueueEntity(
+                entityType = "task",
+                entityId = updated.id,
+                operation = "update",
+                payloadJson = toPayloadJson(updated),
+                clientTimestamp = now
+            )
+        )
+
+        context?.let { ctx ->
+            SupabaseClient.getInstance(ctx).scheduleDebouncedSync()
+        }
+    }
+
+    suspend fun updateTask(task: TaskEntity) {
+        val now = isoFormat.format(Date())
+        val updated = task.copy(
             updatedAt = now,
             version = task.version + 1
         )
@@ -130,12 +157,7 @@ class TaskRepository(
         )
 
         context?.let { ctx ->
-            SyncWorker.enqueueImmediateSync(ctx)
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    SupabaseClient.getInstance(ctx).syncNow()
-                } catch (_: Exception) {}
-            }
+            SupabaseClient.getInstance(ctx).scheduleDebouncedSync()
         }
     }
 
@@ -169,12 +191,7 @@ class TaskRepository(
         )
 
         context?.let { ctx ->
-            SyncWorker.enqueueImmediateSync(ctx)
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    SupabaseClient.getInstance(ctx).syncNow()
-                } catch (_: Exception) {}
-            }
+            SupabaseClient.getInstance(ctx).scheduleDebouncedSync()
         }
     }
 }

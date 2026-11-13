@@ -23,7 +23,16 @@ class SyncWorker(
         return if (syncResult.isSuccess) {
             Result.success()
         } else {
-            Result.retry()
+            val err = syncResult.exceptionOrNull()?.message ?: ""
+            if (runAttemptCount >= 3 ||
+                err.contains("expired", ignoreCase = true) ||
+                err.contains("Offline", ignoreCase = true) ||
+                err.contains("Not authenticated", ignoreCase = true)
+            ) {
+                Result.failure()
+            } else {
+                Result.retry()
+            }
         }
     }
 
@@ -36,7 +45,8 @@ class SyncWorker(
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build()
 
-            val periodicRequest = PeriodicWorkRequestBuilder<SyncWorker>(15, TimeUnit.MINUTES)
+            // 30 minutes periodic background sync
+            val periodicRequest = PeriodicWorkRequestBuilder<SyncWorker>(30, TimeUnit.MINUTES)
                 .setConstraints(constraints)
                 .build()
 

@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "android:run": "./run-android.sh",
+    "scrcpy": "./run-scrcpy.sh",
     "live": "npm --prefix apps/desktop run dev -- --host",
     "desktop:dev": "npm --prefix apps/desktop run dev",
     "desktop:build": "npm --prefix apps/desktop run build",

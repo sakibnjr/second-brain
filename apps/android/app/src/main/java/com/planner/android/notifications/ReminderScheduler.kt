@@ -8,7 +8,9 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -16,6 +18,9 @@ import com.planner.android.MainActivity
 import com.planner.android.data.database.AppDatabase
 import com.planner.android.data.models.TaskEntity
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
@@ -39,8 +44,54 @@ object ReminderScheduler {
         }
     }
 
+    fun hasNotificationPermission(context: Context): Boolean {
+        val channelEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
+        if (!channelEnabled) return false
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    }
+
+    fun canScheduleExactAlarms(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        return alarmManager.canScheduleExactAlarms()
+    }
+
+    fun openNotificationSettings(context: Context) {
+        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    }
+
+    fun openExactAlarmSettings(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                data = Uri.parse("package:${context.packageName}")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        }
+    }
+
     fun parseTimestampMillis(timestampStr: String?): Long? {
         if (timestampStr.isNullOrBlank()) return null
+        val trimmed = timestampStr.trim()
+        try {
+            return Instant.parse(trimmed).toEpochMilli()
+        } catch (_: Exception) {
+        }
+        try {
+            return OffsetDateTime.parse(trimmed).toInstant().toEpochMilli()
+        } catch (_: Exception) {
+        }
         val formats = listOf(
             SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
                 timeZone = TimeZone.getTimeZone("UTC")
@@ -54,7 +105,7 @@ object ReminderScheduler {
         )
         for (fmt in formats) {
             try {
-                val date = fmt.parse(timestampStr.trim())
+                val date = fmt.parse(trimmed)
                 if (date != null) return date.time
             } catch (_: Exception) {
             }
@@ -91,12 +142,20 @@ object ReminderScheduler {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val showIntent = PendingIntent.getActivity(
+            context,
+            requestCode,
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 if (alarmManager.canScheduleExactAlarms()) {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        triggerAtMillis,
+                    alarmManager.setAlarmClock(
+                        AlarmManager.AlarmClockInfo(triggerAtMillis, showIntent),
                         pendingIntent
                     )
                 } else {
@@ -107,9 +166,8 @@ object ReminderScheduler {
                     )
                 }
             } else {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAtMillis,
+                alarmManager.setAlarmClock(
+                    AlarmManager.AlarmClockInfo(triggerAtMillis, showIntent),
                     pendingIntent
                 )
             }
@@ -178,11 +236,68 @@ object ReminderScheduler {
         }
     }
 
+    private const val DAY_END_REQUEST_CODE = 11_00_23
+
+    fun scheduleDayEndReminder(context: Context) {
+        createNotificationChannel(context)
+
+        val cal = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            if (timeInMillis <= System.currentTimeMillis()) {
+                add(Calendar.DAY_OF_YEAR, 1)
+            }
+        }
+        val triggerAtMillis = cal.timeInMillis
+
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, DayEndReminderReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            DAY_END_REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val showIntent = PendingIntent.getActivity(
+            context,
+            DAY_END_REQUEST_CODE,
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setAlarmClock(
+                    AlarmManager.AlarmClockInfo(triggerAtMillis, showIntent),
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+                )
+            }
+        } catch (_: SecurityException) {
+            alarmManager.setAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMillis,
+                pendingIntent
+            )
+        }
+    }
+
     suspend fun rescheduleAllFromDatabase(context: Context) {
         val db = AppDatabase.getDatabase(context)
         val tasks = db.taskDao().getTasksWithActiveReminders()
         for (task in tasks) {
             scheduleTaskReminder(context, task)
         }
+        scheduleDayEndReminder(context)
     }
 }

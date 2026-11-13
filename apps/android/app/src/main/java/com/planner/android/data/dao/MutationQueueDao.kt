@@ -26,4 +26,7 @@ interface MutationQueueDao {
 
     @Query("DELETE FROM mutation_queue WHERE status = 'synced'")
     suspend fun clearSynced()
+
+    @Query("DELETE FROM mutation_queue WHERE retryCount >= 10 OR status = 'failed'")
+    suspend fun pruneStaleMutations()
 }

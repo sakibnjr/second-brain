@@ -72,12 +72,7 @@ class LearningRepository(
         )
 
         context?.let { ctx ->
-            SyncWorker.enqueueImmediateSync(ctx)
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    SupabaseClient.getInstance(ctx).syncNow()
-                } catch (_: Exception) {}
-            }
+            SupabaseClient.getInstance(ctx).scheduleDebouncedSync()
         }
         return resource
     }
@@ -114,12 +109,7 @@ class LearningRepository(
         )
 
         context?.let { ctx ->
-            SyncWorker.enqueueImmediateSync(ctx)
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    SupabaseClient.getInstance(ctx).syncNow()
-                } catch (_: Exception) {}
-            }
+            SupabaseClient.getInstance(ctx).scheduleDebouncedSync()
         }
     }
 
@@ -149,12 +139,7 @@ class LearningRepository(
         )
 
         context?.let { ctx ->
-            SyncWorker.enqueueImmediateSync(ctx)
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    SupabaseClient.getInstance(ctx).syncNow()
-                } catch (_: Exception) {}
-            }
+            SupabaseClient.getInstance(ctx).scheduleDebouncedSync()
         }
     }
 }
